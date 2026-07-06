@@ -9,7 +9,9 @@
     searchQuery: "",
     matches: [],
     matchIndex: 0,
-    filterDept: null
+    filterDept: null,
+    controller: null,
+    fitted: false
   };
 
   const DEFAULT_SETTINGS = {
@@ -59,11 +61,24 @@
       (a.nodesById.size - a.departments.length - 1) + " employees · " +
       a.departments.length + " departments" +
       (a.warnings.length ? " · " + a.warnings.length + " data warnings (see console)" : "");
+    if (!state.fitted) { state.controller.fit(state.layout); state.fitted = true; }
   }
 
   async function boot() {
     $("error-overlay").hidden = true;
     state.settings = Object.assign({}, DEFAULT_SETTINGS);
+    if (!state.controller) {
+      state.controller = OrgChart.interactions.init({
+        viewport: $("viewport"),
+        world: $("world"),
+        onCardClick: function (id) { console.log("card", id); }, // Task 8 replaces
+        onToggleContainer: function (id) {
+          if (state.collapsed.has(id)) state.collapsed.delete(id);
+          else state.collapsed.add(id);
+          update();
+        }
+      });
+    }
     try {
       const items = await loadData();
       state.adapted = OrgChart.dataAdapter.adapt(items);
@@ -75,6 +90,12 @@
   }
 
   $("btn-retry").addEventListener("click", boot);
+  $("btn-fit").addEventListener("click", function () {
+    state.controller.fit(state.layout);
+  });
+  window.addEventListener("resize", function () {
+    if (state.adapted) update();
+  });
   boot();
 
   window.OrgChart = window.OrgChart || {};

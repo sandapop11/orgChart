@@ -36,9 +36,6 @@ body {
   color: var(--text-muted); pointer-events: none;
 }
 
-/* TEMP until interactions land: */
-#viewport { overflow: auto; }
-
 #details-panel, #settings-drawer {
   position: fixed; top: 0; right: 0; bottom: 0; width: 300px;
   background: var(--surface); border-left: 1px solid var(--border);

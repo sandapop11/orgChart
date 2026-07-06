@@ -98,3 +98,13 @@ test("render throws on a missing target", () => {
   const win = makeWindow(SRC).window;
   assert.throws(function () { win.OrgChart.render("nope", { data: DATA }); }, /target element not found/);
 });
+
+test("standalone path: window.maps + render('app-root') renders", async () => {
+  const files = ["data.js"].concat(SRC);
+  const dom = makeWindow(files, { body: '<div id="app-root"></div>' });
+  const win = dom.window;
+  assert.ok(win.maps && Array.isArray(win.maps.items), "data.js defines window.maps.items");
+  win.OrgChart.render("app-root", { instanceId: "v1" });
+  await tick(win);
+  assert.ok(win.document.querySelectorAll(".orgchart-root .card").length > 0);
+});

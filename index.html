@@ -7,46 +7,13 @@
 <link rel="stylesheet" href="styles/themes.css">
 <link rel="stylesheet" href="styles/app.css">
 <link rel="stylesheet" href="styles/chart.css">
-<script>window.OrgChartConfig = { apiUrl: "" };</script>
+<style>
+  html, body { height: 100%; margin: 0; }
+  #app-root { height: 100%; }
+</style>
 </head>
 <body>
-<header id="toolbar">
-  <span class="logo">◈ OrgChart</span>
-  <input id="search-input" type="search" placeholder="Search name, title, department…" autocomplete="off">
-  <span id="search-count"></span>
-  <select id="dept-filter"><option value="">All departments</option></select>
-  <span class="spacer"></span>
-  <button id="btn-fit" title="Fit chart to screen">⤢ Fit</button>
-  <button id="btn-export" title="Export as PNG">⬇ Export</button>
-  <button id="btn-print" title="Print / save as PDF">🖨</button>
-  <button id="btn-settings" title="Customize">⚙</button>
-</header>
-
-<main id="viewport">
-  <div id="world">
-    <svg id="connectors" xmlns="http://www.w3.org/2000/svg"></svg>
-  </div>
-  <div id="status"></div>
-</main>
-
-<aside id="details-panel" hidden>
-  <button class="close" id="details-close">✕</button>
-  <div id="details-body"></div>
-</aside>
-
-<aside id="settings-drawer" hidden>
-  <button class="close" id="settings-close">✕</button>
-  <h2>Customize</h2>
-  <div id="settings-body"></div>
-</aside>
-
-<div id="error-overlay" hidden>
-  <div class="error-box">
-    <h2>Could not load data</h2>
-    <p id="error-message"></p>
-    <button id="btn-retry">Retry</button>
-  </div>
-</div>
+<div id="app-root"></div>
 
 <script src="data.js"></script>
 <script src="src/dataAdapter.js"></script>
@@ -55,8 +22,10 @@
 <script src="src/interactions.js"></script>
 <script src="src/search.js"></script>
 <script src="src/settings.js"></script>
+<script src="src/dom.js"></script>
 <script src="vendor/html-to-image.min.js"></script>
 <script src="src/export.js"></script>
 <script src="src/app.js"></script>
+<script>OrgChart.render('app-root', { instanceId: 'v1' });</script>
 </body>
 </html>

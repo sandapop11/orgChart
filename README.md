@@ -115,6 +115,18 @@ settings drawer (unless `showToolbar` is `false`):
 | `showEmpty` | `boolean` | `false` | Include departments with zero members |
 | `deptColors` | `object` | `{}` | Maps a department's `id` to a hex color string, e.g. `{ "50": "#7c3aed" }` |
 | `showToolbar` | `boolean` | `true` | `false` omits the entire header (search, department filter, fit/export/print/settings buttons). The pan/zoom canvas, card-click details panel, and department collapse/expand still work either way. With no toolbar, the settings drawer is unreachable from the UI — configure display settings entirely via `options.settings` instead. |
+| `showFitButton` | `boolean` | `true` | `false` hides the ⤢ Fit button from the toolbar. |
+| `showExportButton` | `boolean` | `true` | `false` hides the ⬇ Export button from the toolbar. |
+| `showPrintButton` | `boolean` | `true` | `false` hides the 🖨 Print button from the toolbar. |
+| `showSettingsButton` | `boolean` | `true` | `false` hides the ⚙ Settings button from the toolbar. If `showToolbar` is `true` but this is `false`, the settings drawer becomes unreachable from the UI — configure display settings entirely via `options.settings` instead. |
+| `logoText` | `string` | `"◈ OrgChart"` | Replaces the toolbar's logo text verbatim, icon included — include your own icon/emoji in the string if you want one. |
+
+`showToolbar`, `showFitButton`, `showExportButton`, `showPrintButton`,
+`showSettingsButton`, and `logoText` are **boot-time only**: read once from
+`options.settings` when the chart mounts, never persisted to `localStorage`,
+and not exposed as controls in the in-widget settings drawer. Every other
+setting in the table above (`cardStyle` through `deptColors`) is both
+live-editable through the settings drawer and persisted per `instanceId`.
 
 ## Theming
 

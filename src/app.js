@@ -14,13 +14,20 @@
     fitted: false
   };
 
-  const DEFAULT_SETTINGS = {
-    cardStyle: "portrait", orientation: "top-down", maxColumns: 4,
-    spacing: "normal", theme: "system", deptColors: {},
-    showPhotos: true, showTitles: true, showBadges: true, showEmpty: false
-  };
-
   function $(id) { return document.getElementById(id); }
+
+  function applyTheme() {
+    const pref = state.settings.theme;
+    const dark = pref === "dark" ||
+      (pref === "system" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  }
+
+  window.matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", function () {
+      if (state.adapted) applyTheme();
+    });
 
   async function loadData() {
     const cfg = window.OrgChartConfig || {};
@@ -189,7 +196,8 @@
 
   async function boot() {
     $("error-overlay").hidden = true;
-    state.settings = Object.assign({}, DEFAULT_SETTINGS);
+    state.settings = OrgChart.settingsStore.load();
+    applyTheme();
     if (!state.controller) {
       state.controller = OrgChart.interactions.init({
         viewport: $("viewport"),
@@ -214,6 +222,12 @@
         opt.textContent = d.displayName;
         sel.appendChild(opt);
       }
+      OrgChart.settingsPanel.init($("settings-body"), state.settings,
+        state.adapted.departments, function (s) {
+          OrgChart.settingsStore.save(s);
+          applyTheme();
+          update();
+        });
       update();
     } catch (err) {
       showError(err);
@@ -242,6 +256,9 @@
     state.filterDept = e.target.value || null;
     state.fitted = false; // re-fit for the new extent
     update();
+  });
+  $("btn-settings").addEventListener("click", function () {
+    $("settings-drawer").hidden = !$("settings-drawer").hidden;
   });
   window.addEventListener("resize", function () {
     if (state.adapted) update();

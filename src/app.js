@@ -239,6 +239,9 @@
     state.controller.fit(state.layout);
   });
   $("details-close").addEventListener("click", closeDetails);
+  $("settings-close").addEventListener("click", function () {
+    $("settings-drawer").hidden = true;
+  });
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { closeDetails(); $("settings-drawer").hidden = true; }
   });

@@ -13,10 +13,12 @@ body {
 #toolbar .logo { font-weight: 700; margin-right: 8px; white-space: nowrap; }
 #toolbar .spacer { flex: 1; }
 #toolbar input, #toolbar select, #toolbar button {
+  color-scheme: dark;
   background: rgba(255, 255, 255, 0.08); color: inherit;
   border: 1px solid var(--toolbar-border); border-radius: 6px;
   padding: 5px 10px; font: inherit;
 }
+#toolbar select option { background: var(--toolbar-bg); color: var(--toolbar-text); }
 #toolbar button { cursor: pointer; white-space: nowrap; }
 #toolbar button:hover { background: rgba(255, 255, 255, 0.16); }
 #search-input { width: 230px; }
@@ -41,7 +43,7 @@ body {
   background: var(--surface); border-left: 1px solid var(--border);
   box-shadow: var(--shadow); padding: 16px; overflow-y: auto; z-index: 30;
 }
-#details-panel .close {
+#details-panel .close, #settings-drawer .close {
   position: absolute; top: 10px; right: 10px; border: none; background: none;
   font-size: 16px; cursor: pointer; color: var(--text-muted);
 }

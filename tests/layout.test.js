@@ -105,6 +105,54 @@ test("left-right orientation puts root left of containers", () => {
   assert.notEqual(a.y, b.y);
 });
 
+function segmentsIntersectBox(points, box) {
+  // Only axis-aligned segments are produced by the layout engine.
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i], b = points[i + 1];
+    if (a.x === b.x) {
+      const x = a.x, y0 = Math.min(a.y, b.y), y1 = Math.max(a.y, b.y);
+      if (x > box.x && x < box.x + box.w && y1 > box.y && y0 < box.y + box.h) return true;
+    } else if (a.y === b.y) {
+      const y = a.y, x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x);
+      if (y > box.y && y < box.y + box.h && x1 > box.x && x0 < box.x + box.w) return true;
+    }
+  }
+  return false;
+}
+
+test("connectors to wrapped rows do not cross earlier-row containers", () => {
+  // enough departments to force wrapping onto a 2nd row at the 1600px threshold
+  const depts = Array.from({ length: 10 }, (_, i) =>
+    dept(50 + i, [mk(200 + i), mk(300 + i), mk(400 + i)]));
+  const root = mk(1, { children: depts });
+  const r = compute(root, base());
+  assert.ok(new Set(r.containers.map(c => c.y)).size > 1, "test setup should produce 2+ rows");
+
+  for (const conn of r.connectors) {
+    for (const box of r.containers) {
+      assert.ok(!segmentsIntersectBox(conn.points, box),
+        "connector " + JSON.stringify(conn.points) +
+        " crosses container " + box.node.id + " at " + JSON.stringify({ x: box.x, y: box.y, w: box.w, h: box.h }));
+    }
+  }
+});
+
+test("connectors to wrapped columns (left-right) do not cross earlier-column containers", () => {
+  const depts = Array.from({ length: 10 }, (_, i) =>
+    dept(50 + i, [mk(200 + i), mk(300 + i), mk(400 + i)]));
+  const root = mk(1, { children: depts });
+  const r = compute(root, base({ orientation: "left-right", viewportHeight: 900 }));
+  assert.ok(new Set(r.containers.map(c => c.x)).size > 1, "test setup should produce 2+ columns");
+
+  for (const conn of r.connectors) {
+    for (const box of r.containers) {
+      assert.ok(!segmentsIntersectBox(conn.points, box),
+        "connector " + JSON.stringify(conn.points) +
+        " crosses container " + box.node.id + " at " + JSON.stringify({ x: box.x, y: box.y, w: box.w, h: box.h }));
+    }
+  }
+});
+
 test("chart bounds contain every element", () => {
   const root = mk(1, { children: [dept(50, [mk(2), mk(3), mk(4)]), dept(51, [mk(5)])] });
   for (const o of ["top-down", "left-right"]) {

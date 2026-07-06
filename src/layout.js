@@ -156,18 +156,52 @@
     if (!horizontal) {
       const chartW = Math.max(card.w, maxLine) + MARGIN * 2;
       const rootX = chartW / 2 - card.w / 2;
+      const rootCenterX = rootX + card.w / 2;
+      const rootBottomY = MARGIN + card.h;
       cards.push({ node: root, x: rootX, y: MARGIN, w: card.w, h: card.h });
-      let ly = MARGIN + card.h + sp.levelGap;
-      for (const line of lines) {
+      const gutterX = MARGIN / 2;
+      let ly = rootBottomY + sp.levelGap;
+      let prevBottom = rootBottomY;
+      for (let li = 0; li < lines.length; li++) {
+        const line = lines[li];
         const len = lineLen(line);
         let lx = (chartW - len) / 2;
         const lh = Math.max.apply(null, line.map(across).concat([0]));
-        for (const b of line) {
-          const anchor = b.place(lx, ly);
-          connectors.push({ points: vElbow(rootX + card.w / 2, MARGIN + card.h,
-            anchor.cx, anchor.top) });
-          lx += b.w + sp.containerGap;
+
+        if (li === 0) {
+          // nothing sits between root and the first row: a direct elbow is safe.
+          for (const b of line) {
+            const anchor = b.place(lx, ly);
+            connectors.push({ points: vElbow(rootCenterX, rootBottomY, anchor.cx, anchor.top) });
+            lx += b.w + sp.containerGap;
+          }
+        } else {
+          // later rows route through a side gutter so the trunk never crosses
+          // over the rows placed above (a direct elbow would cut through them).
+          const busY = (prevBottom + ly) / 2;
+          const stubY = rootBottomY + sp.levelGap * 0.25;
+          const anchors = [];
+          for (const b of line) {
+            anchors.push(b.place(lx, ly));
+            lx += b.w + sp.containerGap;
+          }
+          const leftCx = Math.min.apply(null, anchors.map(function (a) { return a.cx; }));
+          const rightCx = Math.max.apply(null, anchors.map(function (a) { return a.cx; }));
+          connectors.push({ points: [
+            { x: rootCenterX, y: rootBottomY },
+            { x: rootCenterX, y: stubY },
+            { x: gutterX, y: stubY },
+            { x: gutterX, y: busY },
+            { x: leftCx, y: busY }
+          ] });
+          if (anchors.length > 1) {
+            connectors.push({ points: [{ x: leftCx, y: busY }, { x: rightCx, y: busY }] });
+          }
+          for (const a of anchors) {
+            connectors.push({ points: [{ x: a.cx, y: busY }, { x: a.cx, y: a.top }] });
+          }
         }
+        prevBottom = ly + lh;
         ly += lh + sp.containerGap;
       }
       return { width: chartW, height: ly - sp.containerGap + MARGIN,
@@ -177,18 +211,50 @@
     // left-right: root at left-center, blocks stacked in vertical columns
     const chartH = Math.max(card.h, maxLine) + MARGIN * 2;
     const rootY = chartH / 2 - card.h / 2;
+    const rootRightX = MARGIN + card.w;
+    const rootCenterY = rootY + card.h / 2;
     cards.push({ node: root, x: MARGIN, y: rootY, w: card.w, h: card.h });
-    let colX = MARGIN + card.w + sp.levelGap;
-    for (const line of lines) {
+    const gutterY = MARGIN / 2;
+    let colX = rootRightX + sp.levelGap;
+    let prevRight = rootRightX;
+    for (let ci = 0; ci < lines.length; ci++) {
+      const line = lines[ci];
       const len = lineLen(line);
       let by = (chartH - len) / 2;
       const colW = Math.max.apply(null, line.map(across).concat([0]));
-      for (const b of line) {
-        b.place(colX, by);
-        connectors.push({ points: hElbow(MARGIN + card.w, rootY + card.h / 2,
-          colX, by + b.h / 2) });
-        by += b.h + sp.containerGap;
+
+      if (ci === 0) {
+        for (const b of line) {
+          b.place(colX, by);
+          connectors.push({ points: hElbow(rootRightX, rootCenterY, colX, by + b.h / 2) });
+          by += b.h + sp.containerGap;
+        }
+      } else {
+        const busX = (prevRight + colX) / 2;
+        const stubX = rootRightX + sp.levelGap * 0.25;
+        const centers = [];
+        for (const b of line) {
+          b.place(colX, by);
+          centers.push(by + b.h / 2);
+          by += b.h + sp.containerGap;
+        }
+        const topCy = Math.min.apply(null, centers);
+        const bottomCy = Math.max.apply(null, centers);
+        connectors.push({ points: [
+          { x: rootRightX, y: rootCenterY },
+          { x: stubX, y: rootCenterY },
+          { x: stubX, y: gutterY },
+          { x: busX, y: gutterY },
+          { x: busX, y: topCy }
+        ] });
+        if (centers.length > 1) {
+          connectors.push({ points: [{ x: busX, y: topCy }, { x: busX, y: bottomCy }] });
+        }
+        for (const cy of centers) {
+          connectors.push({ points: [{ x: busX, y: cy }, { x: colX, y: cy }] });
+        }
       }
+      prevRight = colX + colW;
       colX += colW + sp.containerGap;
     }
     return { width: colX - sp.containerGap + MARGIN, height: chartH,

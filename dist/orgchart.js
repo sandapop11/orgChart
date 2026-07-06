@@ -479,7 +479,7 @@
     c.style.top = item.y + "px";
     c.style.width = item.w + "px";
     c.style.height = item.h + "px";
-    c.style.setProperty("--accent", deptColorFor(node.deptId, adapted, settings));
+    c.style.setProperty("--orgchart-accent", deptColorFor(node.deptId, adapted, settings));
 
     if (settings.cardStyle === "portrait") {
       el("div", "band", c);
@@ -508,7 +508,7 @@
     box.style.top = item.y + "px";
     box.style.width = item.w + "px";
     box.style.height = item.h + "px";
-    box.style.setProperty("--accent",
+    box.style.setProperty("--orgchart-accent",
       deptColorFor(item.node.deptId, adapted, settings));
     const label = el("div", "label", box);
     label.dataset.toggleId = item.node.id;
@@ -978,7 +978,7 @@
     function applyTheme() {
       var pref = state.settings.theme;
       var dark = pref === "dark" || (pref === "system" && prefersDark());
-      document.documentElement.dataset.theme = dark ? "dark" : "light";
+      els.root.dataset.theme = dark ? "dark" : "light";
     }
     var mq = typeof window.matchMedia === "function"
       ? window.matchMedia("(prefers-color-scheme: dark)") : null;

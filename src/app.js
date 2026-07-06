@@ -39,7 +39,7 @@
     function applyTheme() {
       var pref = state.settings.theme;
       var dark = pref === "dark" || (pref === "system" && prefersDark());
-      document.documentElement.dataset.theme = dark ? "dark" : "light";
+      els.root.dataset.theme = dark ? "dark" : "light";
     }
     var mq = typeof window.matchMedia === "function"
       ? window.matchMedia("(prefers-color-scheme: dark)") : null;

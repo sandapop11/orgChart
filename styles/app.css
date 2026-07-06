@@ -3,7 +3,7 @@
   display: flex; flex-direction: column;
   height: 100%; min-height: 0; overflow: hidden;
   font: 14px/1.45 system-ui, "Segoe UI", sans-serif;
-  background: var(--bg); color: var(--text);
+  background: var(--orgchart-bg); color: var(--orgchart-text);
 }
 .orgchart-root, .orgchart-root *, .orgchart-root *::before, .orgchart-root *::after {
   box-sizing: border-box;
@@ -11,7 +11,7 @@
 
 .orgchart-root .oc-toolbar {
   display: flex; align-items: center; gap: 8px; padding: 8px 14px;
-  background: var(--toolbar-bg); color: var(--toolbar-text); flex: none;
+  background: var(--orgchart-toolbar-bg); color: var(--orgchart-toolbar-text); flex: none;
 }
 .orgchart-root .oc-logo { font-weight: 700; margin-right: 8px; white-space: nowrap; }
 .orgchart-root .oc-spacer { flex: 1; }
@@ -20,18 +20,18 @@
 .orgchart-root .oc-toolbar button {
   color-scheme: dark;
   background: rgba(255, 255, 255, 0.08); color: inherit;
-  border: 1px solid var(--toolbar-border); border-radius: 6px;
+  border: 1px solid var(--orgchart-toolbar-border); border-radius: 6px;
   padding: 5px 10px; font: inherit;
 }
-.orgchart-root .oc-toolbar select option { background: var(--toolbar-bg); color: var(--toolbar-text); }
+.orgchart-root .oc-toolbar select option { background: var(--orgchart-toolbar-bg); color: var(--orgchart-toolbar-text); }
 .orgchart-root .oc-toolbar button { cursor: pointer; white-space: nowrap; }
 .orgchart-root .oc-toolbar button:hover { background: rgba(255, 255, 255, 0.16); }
 .orgchart-root .oc-search-input { width: 230px; }
-.orgchart-root .oc-search-count { font-size: 12px; color: var(--text-muted); min-width: 48px; }
+.orgchart-root .oc-search-count { font-size: 12px; color: var(--orgchart-text-muted); min-width: 48px; }
 
 .orgchart-root .oc-viewport {
   flex: 1; position: relative; overflow: hidden; min-height: 0;
-  background: radial-gradient(color-mix(in srgb, var(--wire) 35%, transparent) 1px,
+  background: radial-gradient(color-mix(in srgb, var(--orgchart-wire) 35%, transparent) 1px,
     transparent 1px);
   background-size: 18px 18px; cursor: grab;
 }
@@ -40,21 +40,21 @@
 .orgchart-root .oc-connectors { position: absolute; left: 0; top: 0; overflow: visible; }
 .orgchart-root .oc-status {
   position: absolute; left: 12px; bottom: 10px; font-size: 12px;
-  color: var(--text-muted); pointer-events: none;
+  color: var(--orgchart-text-muted); pointer-events: none;
 }
 
 .orgchart-root .oc-details,
 .orgchart-root .oc-settings-drawer {
   position: absolute; top: 0; right: 0; bottom: 0; width: 300px;
-  background: var(--surface); border-left: 1px solid var(--border);
-  box-shadow: var(--shadow); padding: 16px; overflow-y: auto; z-index: 30;
+  background: var(--orgchart-surface); border-left: 1px solid var(--orgchart-border);
+  box-shadow: var(--orgchart-shadow); padding: 16px; overflow-y: auto; z-index: 30;
 }
 .orgchart-root .oc-details[hidden],
 .orgchart-root .oc-settings-drawer[hidden],
 .orgchart-root .oc-error-overlay[hidden] { display: none; }
 .orgchart-root .oc-close {
   position: absolute; top: 10px; right: 10px; border: none; background: none;
-  font-size: 16px; cursor: pointer; color: var(--text-muted);
+  font-size: 16px; cursor: pointer; color: var(--orgchart-text-muted);
 }
 
 .orgchart-root .oc-error-overlay {
@@ -62,39 +62,39 @@
   display: flex; align-items: center; justify-content: center; z-index: 50;
 }
 .orgchart-root .oc-error-box {
-  background: var(--surface); color: var(--text); border-radius: 12px;
-  padding: 28px 36px; max-width: 420px; text-align: center; box-shadow: var(--shadow);
+  background: var(--orgchart-surface); color: var(--orgchart-text); border-radius: 12px;
+  padding: 28px 36px; max-width: 420px; text-align: center; box-shadow: var(--orgchart-shadow);
 }
 .orgchart-root .oc-error-box button {
-  margin-top: 12px; padding: 8px 24px; border-radius: 8px; border: 1px solid var(--border);
-  background: var(--surface-2); color: inherit; font: inherit; cursor: pointer;
+  margin-top: 12px; padding: 8px 24px; border-radius: 8px; border: 1px solid var(--orgchart-border);
+  background: var(--orgchart-surface-2); color: inherit; font: inherit; cursor: pointer;
 }
 
 .orgchart-root .oc-details .avatar-lg {
   width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 700; margin: 12px auto 10px; background: var(--surface-2);
+  font-size: 22px; font-weight: 700; margin: 12px auto 10px; background: var(--orgchart-surface-2);
 }
 .orgchart-root .oc-details h3 { text-align: center; margin: 0 0 2px; }
-.orgchart-root .oc-details .sub { text-align: center; color: var(--text-muted);
+.orgchart-root .oc-details .sub { text-align: center; color: var(--orgchart-text-muted);
   font-size: 12.5px; margin-bottom: 14px; }
 .orgchart-root .oc-details dl { margin: 0; }
 .orgchart-root .oc-details dt { font-size: 11px; text-transform: uppercase;
-  letter-spacing: 0.05em; color: var(--text-muted);
-  border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
+  letter-spacing: 0.05em; color: var(--orgchart-text-muted);
+  border-top: 1px solid var(--orgchart-border); padding-top: 8px; margin-top: 8px; }
 .orgchart-root .oc-details dd { margin: 2px 0 0; font-size: 13.5px; }
 
 .orgchart-root .oc-settings-drawer h2 { margin: 0 0 12px; font-size: 16px; }
 .orgchart-root .oc-settings-drawer h3 { margin: 16px 0 4px; font-size: 13px; }
 .orgchart-root .oc-settings-drawer .setting {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--orgchart-border); font-size: 13px;
 }
 .orgchart-root .oc-settings-drawer select,
 .orgchart-root .oc-settings-drawer input[type="range"] { max-width: 140px; }
 .orgchart-root .oc-settings-drawer button {
   margin-top: 14px; width: 100%; padding: 8px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--surface-2);
+  border: 1px solid var(--orgchart-border); background: var(--orgchart-surface-2);
   color: inherit; font: inherit; cursor: pointer;
 }
 

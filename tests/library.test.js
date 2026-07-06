@@ -31,6 +31,13 @@ test("render mounts cards into a bare div", async () => {
   assert.ok(doc.querySelectorAll(".orgchart-root .container-box").length >= 2);
 });
 
+test("theme attribute is scoped to .orgchart-root, not the host page's <html>", async () => {
+  const { doc } = await mount({ settings: { theme: "dark" } });
+  assert.equal(doc.querySelector(".orgchart-root").dataset.theme, "dark");
+  assert.equal(doc.documentElement.dataset.theme, undefined,
+    "must not set data-theme on the host page's <html> element");
+});
+
 test("clicking a card opens the details panel", async () => {
   const { win, doc } = await mount();
   const card = doc.querySelector('.orgchart-root .card[data-card-id="2"]');

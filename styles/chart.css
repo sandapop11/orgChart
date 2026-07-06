@@ -1,35 +1,35 @@
 /* card sizes here MUST match OrgChart.layoutEngine.CARD_SIZES */
 .orgchart-root .card {
-  position: absolute; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; box-shadow: var(--shadow); cursor: pointer;
-  --accent: #6366f1;
+  position: absolute; background: var(--orgchart-surface); border: 1px solid var(--orgchart-border);
+  border-radius: 10px; box-shadow: var(--orgchart-shadow); cursor: pointer;
+  --orgchart-accent: #6366f1;
 }
-.orgchart-root .card:hover { border-color: var(--accent); }
-.orgchart-root .card--hit { outline: 3px solid var(--hit); outline-offset: 2px; }
-.orgchart-root .card--selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.orgchart-root .card:hover { border-color: var(--orgchart-accent); }
+.orgchart-root .card--hit { outline: 3px solid var(--orgchart-hit); outline-offset: 2px; }
+.orgchart-root .card--selected { border-color: var(--orgchart-accent); box-shadow: 0 0 0 2px var(--orgchart-accent); }
 
 .orgchart-root .card .avatar {
-  border-radius: 50%; object-fit: cover; background: var(--surface-2);
+  border-radius: 50%; object-fit: cover; background: var(--orgchart-surface-2);
   display: flex; align-items: center; justify-content: center; font-weight: 700;
 }
-.orgchart-root .card .name { font-weight: 600; font-size: 12px; color: var(--text);
+.orgchart-root .card .name { font-weight: 600; font-size: 12px; color: var(--orgchart-text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.orgchart-root .card .title { font-size: 10.5px; color: var(--text-muted);
+.orgchart-root .card .title { font-size: 10.5px; color: var(--orgchart-text-muted);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .orgchart-root .card .badge { font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
-  text-transform: uppercase; color: var(--accent); }
+  text-transform: uppercase; color: var(--orgchart-accent); }
 
 /* portrait: 150x118 */
 .orgchart-root .card--portrait { text-align: center; padding: 0 10px 8px; }
 .orgchart-root .card--portrait .band { height: 26px; margin: 0 -10px;
-  border-radius: 10px 10px 0 0; background: var(--accent); }
+  border-radius: 10px 10px 0 0; background: var(--orgchart-accent); }
 .orgchart-root .card--portrait .avatar { width: 48px; height: 48px; margin: -24px auto 4px;
-  border: 3px solid var(--surface); font-size: 15px; }
+  border: 3px solid var(--orgchart-surface); font-size: 15px; }
 .orgchart-root .card--portrait .badge { display: inline-block; margin-top: 2px; }
 
 /* classic: 210x64 */
 .orgchart-root .card--classic { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-  border-left: 4px solid var(--accent); }
+  border-left: 4px solid var(--orgchart-accent); }
 .orgchart-root .card--classic .avatar { width: 44px; height: 44px; flex: none; font-size: 14px; }
 .orgchart-root .card--classic .text { min-width: 0; }
 
@@ -39,15 +39,15 @@
   font-size: 11px; }
 .orgchart-root .card--compact .text { min-width: 0; }
 .orgchart-root .card--compact .dot { width: 8px; height: 8px; border-radius: 50%;
-  background: var(--accent); margin-left: auto; flex: none; }
+  background: var(--orgchart-accent); margin-left: auto; flex: none; }
 
 .orgchart-root .container-box {
-  position: absolute; border: 1.5px dashed var(--accent); border-radius: 12px;
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
-  --accent: #6366f1;
+  position: absolute; border: 1.5px dashed var(--orgchart-accent); border-radius: 12px;
+  background: color-mix(in srgb, var(--orgchart-accent) 6%, transparent);
+  --orgchart-accent: #6366f1;
 }
 .orgchart-root .container-box .label {
-  position: absolute; top: -11px; left: 12px; background: var(--accent); color: #fff;
+  position: absolute; top: -11px; left: 12px; background: var(--orgchart-accent); color: #fff;
   font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 99px;
   cursor: pointer; user-select: none; white-space: nowrap;
 }
@@ -56,9 +56,9 @@
   align-items: center; justify-content: center; cursor: pointer;
 }
 .orgchart-root .container-box.collapsed .label { position: static; background: none;
-  color: var(--accent); font-size: 12px; }
+  color: var(--orgchart-accent); font-size: 12px; }
 
-.orgchart-root .oc-connectors path { fill: none; stroke: var(--wire); stroke-width: 1.5;
+.orgchart-root .oc-connectors path { fill: none; stroke: var(--orgchart-wire); stroke-width: 1.5;
   stroke-linejoin: round; }
 
 .orgchart-root .hidden-el { display: none !important; }

@@ -62,3 +62,56 @@ test("deterministic: same input gives identical output", () => {
   const root = mk(1, { children: [dept(50, [mk(2), mk(3)]), dept(51, [mk(4)])] });
   assert.deepEqual(compute(root, base()), compute(root, base()));
 });
+
+test("filterDepartmentId keeps only that container plus root", () => {
+  const root = mk(1, { children: [dept(50, [mk(2)]), dept(51, [mk(3)])] });
+  const r = compute(root, base({ filterDepartmentId: "51" }));
+  assert.deepEqual(r.containers.map(c => c.node.id), ["51"]);
+  assert.ok(r.cards.some(k => k.node.id === "1"));
+  assert.ok(!r.cards.some(k => k.node.id === "2"));
+});
+
+test("empty departments hidden unless showEmpty", () => {
+  const root = mk(1, { children: [dept(50, [mk(2)]), dept(60, [])] });
+  const hidden = compute(root, base());
+  assert.ok(!hidden.containers.some(c => c.node.id === "60"));
+  const shown = compute(root, base({ showEmpty: true }));
+  assert.ok(shown.containers.some(c => c.node.id === "60"));
+});
+
+test("container rows wrap when exceeding max(1600, viewportWidth)", () => {
+  // 6 depts x 1 member: each container ~ 182 wide; force tiny threshold via viewportWidth
+  const depts = [50, 51, 52, 53, 54, 55].map(id => dept(id, [mk(id + 100)]));
+  const root = mk(1, { children: depts });
+  const narrow = compute(root, base({ viewportWidth: 100 })); // threshold = 1600 still
+  const ys1 = new Set(narrow.containers.map(c => c.y));
+  assert.equal(ys1.size, 1, "under 1600px total width stays on one row");
+  // 12 wide containers exceed 1600 -> multiple rows
+  const many = mk(1, { children: Array.from({ length: 12 }, (_, i) => dept(70 + i, [mk(200 + i)])) });
+  const wrapped = compute(many, base({ viewportWidth: 100 }));
+  const ys2 = new Set(wrapped.containers.map(c => c.y));
+  assert.ok(ys2.size > 1, "wraps onto additional rows");
+});
+
+test("left-right orientation puts root left of containers", () => {
+  const root = mk(1, { children: [dept(50, [mk(2)]), dept(51, [mk(3)])] });
+  const r = compute(root, base({ orientation: "left-right" }));
+  const rootCard = r.cards.find(k => k.node.id === "1");
+  for (const c of r.containers) {
+    assert.ok(c.x > rootCard.x + rootCard.w, "container is to the right of root");
+  }
+  // containers stack vertically
+  const [a, b] = r.containers;
+  assert.notEqual(a.y, b.y);
+});
+
+test("chart bounds contain every element", () => {
+  const root = mk(1, { children: [dept(50, [mk(2), mk(3), mk(4)]), dept(51, [mk(5)])] });
+  for (const o of ["top-down", "left-right"]) {
+    const r = compute(root, base({ orientation: o }));
+    for (const el of r.cards.concat(r.containers)) {
+      assert.ok(el.x >= 0 && el.y >= 0, o + ": no negative coords");
+      assert.ok(el.x + el.w <= r.width && el.y + el.h <= r.height, o + ": inside bounds");
+    }
+  }
+});

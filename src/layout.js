@@ -118,25 +118,81 @@
       };
     }
 
-    // Task 4 replaces this stub top level with wrapping, orientation and filtering.
-    const topBlocks = root.children.map(function (c) {
+    // --- top level: visible children, wrapping rows/columns, orientation ---
+    const horizontal = settings.orientation === "left-right";
+
+    const visible = root.children.filter(function (c) {
+      if (settings.filterDepartmentId) {
+        return c.isGroup && c.id === settings.filterDepartmentId;
+      }
+      if (!settings.showEmpty && c.isGroup && countMembers(c) === 0) return false;
+      return true;
+    });
+    const topBlocks = visible.map(function (c) {
       return c.isGroup ? groupBlock(c) : nodeBlock(c);
     });
-    const rootW = topBlocks.reduce(function (s, b) { return s + b.w; }, 0) +
-      sp.containerGap * Math.max(0, topBlocks.length - 1);
-    const chartW = Math.max(card.w, rootW) + MARGIN * 2;
-    const rootX = chartW / 2 - card.w / 2;
-    cards.push({ node: root, x: rootX, y: MARGIN, w: card.w, h: card.h });
-    let bx = (chartW - rootW) / 2;
-    const by = MARGIN + card.h + sp.levelGap;
-    let maxH = 0;
+
+    // group blocks into lines (rows when top-down, columns when left-right)
+    const limit = horizontal
+      ? Math.max(900, settings.viewportHeight || 0)
+      : Math.max(1600, settings.viewportWidth || 0);
+    const along = function (b) { return horizontal ? b.h : b.w; };
+    const across = function (b) { return horizontal ? b.w : b.h; };
+    const lines = [];
+    let cur = [], curLen = 0;
     for (const b of topBlocks) {
-      const anchor = b.place(bx, by);
-      connectors.push({ points: vElbow(rootX + card.w / 2, MARGIN + card.h, anchor.cx, anchor.top) });
-      bx += b.w + sp.containerGap;
-      if (b.h > maxH) maxH = b.h;
+      const extra = (cur.length ? sp.containerGap : 0) + along(b);
+      if (cur.length && curLen + extra > limit) { lines.push(cur); cur = [b]; curLen = along(b); }
+      else { cur.push(b); curLen += extra; }
     }
-    return { width: chartW, height: by + maxH + MARGIN, cards, containers, connectors };
+    if (cur.length) lines.push(cur);
+
+    function lineLen(line) {
+      return line.reduce(function (s, b) { return s + along(b); }, 0) +
+        sp.containerGap * (line.length - 1);
+    }
+    const maxLine = lines.length ? Math.max.apply(null, lines.map(lineLen)) : 0;
+
+    if (!horizontal) {
+      const chartW = Math.max(card.w, maxLine) + MARGIN * 2;
+      const rootX = chartW / 2 - card.w / 2;
+      cards.push({ node: root, x: rootX, y: MARGIN, w: card.w, h: card.h });
+      let ly = MARGIN + card.h + sp.levelGap;
+      for (const line of lines) {
+        const len = lineLen(line);
+        let lx = (chartW - len) / 2;
+        const lh = Math.max.apply(null, line.map(across).concat([0]));
+        for (const b of line) {
+          const anchor = b.place(lx, ly);
+          connectors.push({ points: vElbow(rootX + card.w / 2, MARGIN + card.h,
+            anchor.cx, anchor.top) });
+          lx += b.w + sp.containerGap;
+        }
+        ly += lh + sp.containerGap;
+      }
+      return { width: chartW, height: ly - sp.containerGap + MARGIN,
+        cards, containers, connectors };
+    }
+
+    // left-right: root at left-center, blocks stacked in vertical columns
+    const chartH = Math.max(card.h, maxLine) + MARGIN * 2;
+    const rootY = chartH / 2 - card.h / 2;
+    cards.push({ node: root, x: MARGIN, y: rootY, w: card.w, h: card.h });
+    let colX = MARGIN + card.w + sp.levelGap;
+    for (const line of lines) {
+      const len = lineLen(line);
+      let by = (chartH - len) / 2;
+      const colW = Math.max.apply(null, line.map(across).concat([0]));
+      for (const b of line) {
+        b.place(colX, by);
+        connectors.push({ points: hElbow(MARGIN + card.w, rootY + card.h / 2,
+          colX, by + b.h / 2) });
+        by += b.h + sp.containerGap;
+      }
+      colX += colW + sp.containerGap;
+    }
+    return { width: colX - sp.containerGap + MARGIN, height: chartH,
+      cards, containers, connectors };
   }
 
   const api = { compute, CARD_SIZES, SPACING, PILL, MARGIN };

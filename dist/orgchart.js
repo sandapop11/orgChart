@@ -834,6 +834,11 @@
   function build(options) {
     options = options || {};
     var showToolbar = options.showToolbar !== false;
+    var showFitButton = options.showFitButton !== false;
+    var showExportButton = options.showExportButton !== false;
+    var showPrintButton = options.showPrintButton !== false;
+    var showSettingsButton = options.showSettingsButton !== false;
+    var logoText = options.logoText || "◈ OrgChart";
     var els = {};
 
     var toolbar = null;
@@ -843,12 +848,20 @@
       els.searchCount = h("span", { "class": "oc-search-count" });
       els.deptFilter = h("select", { "class": "oc-dept-filter" },
         [ h("option", { value: "", text: "All departments" }) ]);
-      els.btnFit = h("button", { type: "button", "class": "oc-btn oc-btn-fit", title: "Fit chart to screen", text: "⤢ Fit" });
-      els.btnExport = h("button", { type: "button", "class": "oc-btn oc-btn-export", title: "Export as PNG", text: "⬇ Export" });
-      els.btnPrint = h("button", { type: "button", "class": "oc-btn oc-btn-print", title: "Print / save as PDF", text: "🖨" });
-      els.btnSettings = h("button", { type: "button", "class": "oc-btn oc-btn-settings", title: "Customize", text: "⚙" });
+      if (showFitButton) {
+        els.btnFit = h("button", { type: "button", "class": "oc-btn oc-btn-fit", title: "Fit chart to screen", text: "⤢ Fit" });
+      }
+      if (showExportButton) {
+        els.btnExport = h("button", { type: "button", "class": "oc-btn oc-btn-export", title: "Export as PNG", text: "⬇ Export" });
+      }
+      if (showPrintButton) {
+        els.btnPrint = h("button", { type: "button", "class": "oc-btn oc-btn-print", title: "Print / save as PDF", text: "🖨" });
+      }
+      if (showSettingsButton) {
+        els.btnSettings = h("button", { type: "button", "class": "oc-btn oc-btn-settings", title: "Customize", text: "⚙" });
+      }
       toolbar = h("header", { "class": "oc-toolbar" }, [
-        h("span", { "class": "oc-logo", text: "◈ OrgChart" }),
+        h("span", { "class": "oc-logo", text: logoText }),
         els.searchInput, els.searchCount, els.deptFilter,
         h("span", { "class": "oc-spacer" }),
         els.btnFit, els.btnExport, els.btnPrint, els.btnSettings
@@ -958,10 +971,23 @@
     var host = resolveTarget(target);
     if (!host) throw new Error("OrgChart.render: target element not found: " + target);
 
-    var showToolbar = !(options.settings && options.settings.showToolbar === false);
+    var optSettings = options.settings || {};
+    var showToolbar = optSettings.showToolbar !== false;
+    var showFitButton = optSettings.showFitButton !== false;
+    var showExportButton = optSettings.showExportButton !== false;
+    var showPrintButton = optSettings.showPrintButton !== false;
+    var showSettingsButton = optSettings.showSettingsButton !== false;
+    var logoText = optSettings.logoText || "◈ OrgChart";
     var instanceId = options.instanceId || host.id || "default";
 
-    var els = OrgChart.dom.build({ showToolbar: showToolbar });
+    var els = OrgChart.dom.build({
+      showToolbar: showToolbar,
+      showFitButton: showFitButton,
+      showExportButton: showExportButton,
+      showPrintButton: showPrintButton,
+      showSettingsButton: showSettingsButton,
+      logoText: logoText
+    });
     host.appendChild(els.root);
 
     var state = {

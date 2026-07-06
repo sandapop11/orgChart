@@ -1,91 +1,98 @@
-* { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; }
-body {
+.orgchart-root {
+  position: relative;
+  display: flex; flex-direction: column;
+  height: 100%; min-height: 0; overflow: hidden;
   font: 14px/1.45 system-ui, "Segoe UI", sans-serif;
   background: var(--bg); color: var(--text);
-  display: flex; flex-direction: column; overflow: hidden;
+}
+.orgchart-root, .orgchart-root *, .orgchart-root *::before, .orgchart-root *::after {
+  box-sizing: border-box;
 }
 
-#toolbar {
+.orgchart-root .oc-toolbar {
   display: flex; align-items: center; gap: 8px; padding: 8px 14px;
   background: var(--toolbar-bg); color: var(--toolbar-text); flex: none;
 }
-#toolbar .logo { font-weight: 700; margin-right: 8px; white-space: nowrap; }
-#toolbar .spacer { flex: 1; }
-#toolbar input, #toolbar select, #toolbar button {
+.orgchart-root .oc-logo { font-weight: 700; margin-right: 8px; white-space: nowrap; }
+.orgchart-root .oc-spacer { flex: 1; }
+.orgchart-root .oc-toolbar input,
+.orgchart-root .oc-toolbar select,
+.orgchart-root .oc-toolbar button {
   color-scheme: dark;
   background: rgba(255, 255, 255, 0.08); color: inherit;
   border: 1px solid var(--toolbar-border); border-radius: 6px;
   padding: 5px 10px; font: inherit;
 }
-#toolbar select option { background: var(--toolbar-bg); color: var(--toolbar-text); }
-#toolbar button { cursor: pointer; white-space: nowrap; }
-#toolbar button:hover { background: rgba(255, 255, 255, 0.16); }
-#search-input { width: 230px; }
-#search-count { font-size: 12px; color: var(--text-muted); min-width: 48px; }
+.orgchart-root .oc-toolbar select option { background: var(--toolbar-bg); color: var(--toolbar-text); }
+.orgchart-root .oc-toolbar button { cursor: pointer; white-space: nowrap; }
+.orgchart-root .oc-toolbar button:hover { background: rgba(255, 255, 255, 0.16); }
+.orgchart-root .oc-search-input { width: 230px; }
+.orgchart-root .oc-search-count { font-size: 12px; color: var(--text-muted); min-width: 48px; }
 
-#viewport {
-  flex: 1; position: relative; overflow: hidden;
+.orgchart-root .oc-viewport {
+  flex: 1; position: relative; overflow: hidden; min-height: 0;
   background: radial-gradient(color-mix(in srgb, var(--wire) 35%, transparent) 1px,
     transparent 1px);
   background-size: 18px 18px; cursor: grab;
 }
-#viewport.panning { cursor: grabbing; }
-#world { position: absolute; transform-origin: 0 0; }
-#connectors { position: absolute; left: 0; top: 0; overflow: visible; }
-#status {
+.orgchart-root .oc-viewport.panning { cursor: grabbing; }
+.orgchart-root .oc-world { position: absolute; transform-origin: 0 0; }
+.orgchart-root .oc-connectors { position: absolute; left: 0; top: 0; overflow: visible; }
+.orgchart-root .oc-status {
   position: absolute; left: 12px; bottom: 10px; font-size: 12px;
   color: var(--text-muted); pointer-events: none;
 }
 
-#details-panel, #settings-drawer {
-  position: fixed; top: 0; right: 0; bottom: 0; width: 300px;
+.orgchart-root .oc-details,
+.orgchart-root .oc-settings-drawer {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 300px;
   background: var(--surface); border-left: 1px solid var(--border);
   box-shadow: var(--shadow); padding: 16px; overflow-y: auto; z-index: 30;
 }
-#details-panel .close, #settings-drawer .close {
+.orgchart-root .oc-details[hidden],
+.orgchart-root .oc-settings-drawer[hidden],
+.orgchart-root .oc-error-overlay[hidden] { display: none; }
+.orgchart-root .oc-close {
   position: absolute; top: 10px; right: 10px; border: none; background: none;
   font-size: 16px; cursor: pointer; color: var(--text-muted);
 }
 
-#error-overlay {
-  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+.orgchart-root .oc-error-overlay {
+  position: absolute; inset: 0; background: rgba(15, 23, 42, 0.55);
   display: flex; align-items: center; justify-content: center; z-index: 50;
 }
-#error-overlay[hidden] { display: none; }
-.error-box {
+.orgchart-root .oc-error-box {
   background: var(--surface); color: var(--text); border-radius: 12px;
   padding: 28px 36px; max-width: 420px; text-align: center; box-shadow: var(--shadow);
 }
-.error-box button {
+.orgchart-root .oc-error-box button {
   margin-top: 12px; padding: 8px 24px; border-radius: 8px; border: 1px solid var(--border);
   background: var(--surface-2); color: inherit; font: inherit; cursor: pointer;
 }
 
-#details-panel .avatar-lg {
+.orgchart-root .oc-details .avatar-lg {
   width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 700; margin: 12px auto 10px;
-  background: var(--surface-2);
+  font-size: 22px; font-weight: 700; margin: 12px auto 10px; background: var(--surface-2);
 }
-#details-panel h3 { text-align: center; margin: 0 0 2px; }
-#details-panel .sub { text-align: center; color: var(--text-muted);
+.orgchart-root .oc-details h3 { text-align: center; margin: 0 0 2px; }
+.orgchart-root .oc-details .sub { text-align: center; color: var(--text-muted);
   font-size: 12.5px; margin-bottom: 14px; }
-#details-panel dl { margin: 0; }
-#details-panel dt { font-size: 11px; text-transform: uppercase;
+.orgchart-root .oc-details dl { margin: 0; }
+.orgchart-root .oc-details dt { font-size: 11px; text-transform: uppercase;
   letter-spacing: 0.05em; color: var(--text-muted);
   border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
-#details-panel dd { margin: 2px 0 0; font-size: 13.5px; }
+.orgchart-root .oc-details dd { margin: 2px 0 0; font-size: 13.5px; }
 
-#settings-drawer h2 { margin: 0 0 12px; font-size: 16px; }
-#settings-drawer h3 { margin: 16px 0 4px; font-size: 13px; }
-#settings-drawer .setting {
+.orgchart-root .oc-settings-drawer h2 { margin: 0 0 12px; font-size: 16px; }
+.orgchart-root .oc-settings-drawer h3 { margin: 16px 0 4px; font-size: 13px; }
+.orgchart-root .oc-settings-drawer .setting {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border);
-  font-size: 13px;
+  gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
 }
-#settings-drawer select, #settings-drawer input[type="range"] { max-width: 140px; }
-#settings-drawer button {
+.orgchart-root .oc-settings-drawer select,
+.orgchart-root .oc-settings-drawer input[type="range"] { max-width: 140px; }
+.orgchart-root .oc-settings-drawer button {
   margin-top: 14px; width: 100%; padding: 8px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--surface-2);
   color: inherit; font: inherit; cursor: pointer;
@@ -93,10 +100,12 @@ body {
 
 @media print {
   @page { size: landscape; margin: 8mm; }
-  #toolbar, #details-panel, #settings-drawer, #status, #error-overlay {
-    display: none !important;
-  }
-  body { overflow: visible; }
-  #viewport { overflow: visible; background: none; }
-  #world { position: static; transform-origin: 0 0; }
+  .orgchart-root .oc-toolbar,
+  .orgchart-root .oc-details,
+  .orgchart-root .oc-settings-drawer,
+  .orgchart-root .oc-status,
+  .orgchart-root .oc-error-overlay { display: none !important; }
+  .orgchart-root { overflow: visible; height: auto; }
+  .orgchart-root .oc-viewport { overflow: visible; background: none; }
+  .orgchart-root .oc-world { position: static; transform-origin: 0 0; }
 }

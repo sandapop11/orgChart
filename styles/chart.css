@@ -1,64 +1,64 @@
 /* card sizes here MUST match OrgChart.layoutEngine.CARD_SIZES */
-.card {
+.orgchart-root .card {
   position: absolute; background: var(--surface); border: 1px solid var(--border);
   border-radius: 10px; box-shadow: var(--shadow); cursor: pointer;
   --accent: #6366f1;
 }
-.card:hover { border-color: var(--accent); }
-.card--hit { outline: 3px solid var(--hit); outline-offset: 2px; }
-.card--selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.orgchart-root .card:hover { border-color: var(--accent); }
+.orgchart-root .card--hit { outline: 3px solid var(--hit); outline-offset: 2px; }
+.orgchart-root .card--selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 
-.card .avatar {
+.orgchart-root .card .avatar {
   border-radius: 50%; object-fit: cover; background: var(--surface-2);
   display: flex; align-items: center; justify-content: center; font-weight: 700;
 }
-.card .name { font-weight: 600; font-size: 12px; color: var(--text);
+.orgchart-root .card .name { font-weight: 600; font-size: 12px; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card .title { font-size: 10.5px; color: var(--text-muted);
+.orgchart-root .card .title { font-size: 10.5px; color: var(--text-muted);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card .badge { font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
+.orgchart-root .card .badge { font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; color: var(--accent); }
 
 /* portrait: 150x118 */
-.card--portrait { text-align: center; padding: 0 10px 8px; }
-.card--portrait .band { height: 26px; margin: 0 -10px;
+.orgchart-root .card--portrait { text-align: center; padding: 0 10px 8px; }
+.orgchart-root .card--portrait .band { height: 26px; margin: 0 -10px;
   border-radius: 10px 10px 0 0; background: var(--accent); }
-.card--portrait .avatar { width: 48px; height: 48px; margin: -24px auto 4px;
+.orgchart-root .card--portrait .avatar { width: 48px; height: 48px; margin: -24px auto 4px;
   border: 3px solid var(--surface); font-size: 15px; }
-.card--portrait .badge { display: inline-block; margin-top: 2px; }
+.orgchart-root .card--portrait .badge { display: inline-block; margin-top: 2px; }
 
 /* classic: 210x64 */
-.card--classic { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+.orgchart-root .card--classic { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
   border-left: 4px solid var(--accent); }
-.card--classic .avatar { width: 44px; height: 44px; flex: none; font-size: 14px; }
-.card--classic .text { min-width: 0; }
+.orgchart-root .card--classic .avatar { width: 44px; height: 44px; flex: none; font-size: 14px; }
+.orgchart-root .card--classic .text { min-width: 0; }
 
 /* compact: 170x44 */
-.card--compact { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
-.card--compact .avatar { width: 28px; height: 28px; border-radius: 6px; flex: none;
+.orgchart-root .card--compact { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
+.orgchart-root .card--compact .avatar { width: 28px; height: 28px; border-radius: 6px; flex: none;
   font-size: 11px; }
-.card--compact .text { min-width: 0; }
-.card--compact .dot { width: 8px; height: 8px; border-radius: 50%;
+.orgchart-root .card--compact .text { min-width: 0; }
+.orgchart-root .card--compact .dot { width: 8px; height: 8px; border-radius: 50%;
   background: var(--accent); margin-left: auto; flex: none; }
 
-.container-box {
+.orgchart-root .container-box {
   position: absolute; border: 1.5px dashed var(--accent); border-radius: 12px;
   background: color-mix(in srgb, var(--accent) 6%, transparent);
   --accent: #6366f1;
 }
-.container-box .label {
+.orgchart-root .container-box .label {
   position: absolute; top: -11px; left: 12px; background: var(--accent); color: #fff;
   font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 99px;
   cursor: pointer; user-select: none; white-space: nowrap;
 }
-.container-box.collapsed {
+.orgchart-root .container-box.collapsed {
   border-style: solid; border-radius: 99px; display: flex;
   align-items: center; justify-content: center; cursor: pointer;
 }
-.container-box.collapsed .label { position: static; background: none;
+.orgchart-root .container-box.collapsed .label { position: static; background: none;
   color: var(--accent); font-size: 12px; }
 
-#connectors path { fill: none; stroke: var(--wire); stroke-width: 1.5;
+.orgchart-root .oc-connectors path { fill: none; stroke: var(--wire); stroke-width: 1.5;
   stroke-linejoin: round; }
 
-.hidden-el { display: none !important; }
+.orgchart-root .hidden-el { display: none !important; }

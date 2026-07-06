@@ -260,6 +260,16 @@
   $("btn-settings").addEventListener("click", function () {
     $("settings-drawer").hidden = !$("settings-drawer").hidden;
   });
+  $("btn-export").addEventListener("click", function () {
+    OrgChart.exporter.exportPng($("world"), state.layout);
+  });
+  $("btn-print").addEventListener("click", function () { window.print(); });
+  window.addEventListener("beforeprint", function () {
+    OrgChart.exporter.preparePrint($("world"), state.layout);
+  });
+  window.addEventListener("afterprint", function () {
+    OrgChart.exporter.restoreAfterPrint($("world"));
+  });
   window.addEventListener("resize", function () {
     if (state.adapted) update();
   });

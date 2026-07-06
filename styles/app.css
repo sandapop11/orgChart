@@ -88,3 +88,13 @@ body {
   border: 1px solid var(--border); background: var(--surface-2);
   color: inherit; font: inherit; cursor: pointer;
 }
+
+@media print {
+  @page { size: landscape; margin: 8mm; }
+  #toolbar, #details-panel, #settings-drawer, #status, #error-overlay {
+    display: none !important;
+  }
+  body { overflow: visible; }
+  #viewport { overflow: visible; background: none; }
+  #world { position: static; transform-origin: 0 0; }
+}

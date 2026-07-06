@@ -121,6 +121,26 @@ test("render throws on a missing target", () => {
   assert.throws(function () { win.OrgChart.render("nope", { data: DATA }); }, /target element not found/);
 });
 
+test("individual toolbar buttons can be hidden while others remain", async () => {
+  const { doc } = await mount({ settings: { showFitButton: false, showPrintButton: false } });
+  assert.equal(doc.querySelector(".oc-btn-fit"), null);
+  assert.equal(doc.querySelector(".oc-btn-print"), null);
+  assert.ok(doc.querySelector(".oc-btn-export"), "export button still present");
+  assert.ok(doc.querySelector(".oc-btn-settings"), "settings button still present");
+});
+
+test("custom logoText replaces the default toolbar branding", async () => {
+  const { doc } = await mount({ settings: { logoText: "★ Acme Corp" } });
+  assert.equal(doc.querySelector(".oc-logo").textContent, "★ Acme Corp");
+});
+
+test("button flags and logoText default to shown/original when settings is omitted", async () => {
+  const { doc } = await mount();
+  assert.ok(doc.querySelector(".oc-btn-fit") && doc.querySelector(".oc-btn-export") &&
+    doc.querySelector(".oc-btn-print") && doc.querySelector(".oc-btn-settings"));
+  assert.equal(doc.querySelector(".oc-logo").textContent, "◈ OrgChart");
+});
+
 test("standalone path: window.maps + render('app-root') renders", async () => {
   const files = ["data.js"].concat(SRC);
   const dom = makeWindow(files, { body: '<div id="app-root"></div>' });

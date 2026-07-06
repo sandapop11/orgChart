@@ -14,10 +14,23 @@
     var host = resolveTarget(target);
     if (!host) throw new Error("OrgChart.render: target element not found: " + target);
 
-    var showToolbar = !(options.settings && options.settings.showToolbar === false);
+    var optSettings = options.settings || {};
+    var showToolbar = optSettings.showToolbar !== false;
+    var showFitButton = optSettings.showFitButton !== false;
+    var showExportButton = optSettings.showExportButton !== false;
+    var showPrintButton = optSettings.showPrintButton !== false;
+    var showSettingsButton = optSettings.showSettingsButton !== false;
+    var logoText = optSettings.logoText || "◈ OrgChart";
     var instanceId = options.instanceId || host.id || "default";
 
-    var els = OrgChart.dom.build({ showToolbar: showToolbar });
+    var els = OrgChart.dom.build({
+      showToolbar: showToolbar,
+      showFitButton: showFitButton,
+      showExportButton: showExportButton,
+      showPrintButton: showPrintButton,
+      showSettingsButton: showSettingsButton,
+      logoText: logoText
+    });
     host.appendChild(els.root);
 
     var state = {

@@ -31,6 +31,21 @@ test("render mounts cards into a bare div", async () => {
   assert.ok(doc.querySelectorAll(".orgchart-root .container-box").length >= 2);
 });
 
+test("toolbar buttons don't submit a <form> the target happens to sit inside", async () => {
+  const dom = makeWindow(SRC, { body: '<form id="host-form"><div id="host"></div></form>' });
+  const win = dom.window;
+  win.OrgChart.render("host", { data: DATA, instanceId: "form-test" });
+  await tick(win);
+  const form = win.document.getElementById("host-form");
+  let submitted = false;
+  form.addEventListener("submit", function (e) { submitted = true; e.preventDefault(); });
+  for (const cls of [".oc-btn-fit", ".oc-btn-settings", ".oc-btn-print", ".oc-btn-export"]) {
+    const btn = win.document.querySelector(cls);
+    btn.dispatchEvent(new win.MouseEvent("click", { bubbles: true, cancelable: true }));
+  }
+  assert.equal(submitted, false, "a toolbar button submitted the host form");
+});
+
 test("theme attribute is scoped to .orgchart-root, not the host page's <html>", async () => {
   const { doc } = await mount({ settings: { theme: "dark" } });
   assert.equal(doc.querySelector(".orgchart-root").dataset.theme, "dark");

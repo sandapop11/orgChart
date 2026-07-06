@@ -24,3 +24,14 @@ test("dom.build with showToolbar:false omits the toolbar but keeps the chart", (
   assert.ok(els.detailsPanel, "details panel still built");
   assert.equal(els.root.querySelector(".oc-toolbar"), null);
 });
+
+test("every button has type=button so it can't submit a host page's <form>", () => {
+  const dom = makeWindow(["src/dom.js"]);
+  const els = dom.window.OrgChart.dom.build({ showToolbar: true });
+  const buttons = els.root.querySelectorAll("button");
+  assert.ok(buttons.length > 0, "sanity: found button elements");
+  buttons.forEach(function (b) {
+    assert.equal(b.getAttribute("type"), "button",
+      "button missing type=\"button\": " + (b.className || b.textContent));
+  });
+});

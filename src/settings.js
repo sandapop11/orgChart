@@ -111,6 +111,7 @@
       }
 
       const reset = document.createElement("button");
+      reset.type = "button";
       reset.textContent = "Reset to defaults";
       reset.addEventListener("click", function () {
         const fresh = Object.assign({}, DEFAULTS, { deptColors: {} });

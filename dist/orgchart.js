@@ -784,6 +784,7 @@
       }
 
       const reset = document.createElement("button");
+      reset.type = "button";
       reset.textContent = "Reset to defaults";
       reset.addEventListener("click", function () {
         const fresh = Object.assign({}, DEFAULTS, { deptColors: {} });
@@ -838,10 +839,10 @@
       els.searchCount = h("span", { "class": "oc-search-count" });
       els.deptFilter = h("select", { "class": "oc-dept-filter" },
         [ h("option", { value: "", text: "All departments" }) ]);
-      els.btnFit = h("button", { "class": "oc-btn oc-btn-fit", title: "Fit chart to screen", text: "⤢ Fit" });
-      els.btnExport = h("button", { "class": "oc-btn oc-btn-export", title: "Export as PNG", text: "⬇ Export" });
-      els.btnPrint = h("button", { "class": "oc-btn oc-btn-print", title: "Print / save as PDF", text: "🖨" });
-      els.btnSettings = h("button", { "class": "oc-btn oc-btn-settings", title: "Customize", text: "⚙" });
+      els.btnFit = h("button", { type: "button", "class": "oc-btn oc-btn-fit", title: "Fit chart to screen", text: "⤢ Fit" });
+      els.btnExport = h("button", { type: "button", "class": "oc-btn oc-btn-export", title: "Export as PNG", text: "⬇ Export" });
+      els.btnPrint = h("button", { type: "button", "class": "oc-btn oc-btn-print", title: "Print / save as PDF", text: "🖨" });
+      els.btnSettings = h("button", { type: "button", "class": "oc-btn oc-btn-settings", title: "Customize", text: "⚙" });
       toolbar = h("header", { "class": "oc-toolbar" }, [
         h("span", { "class": "oc-logo", text: "◈ OrgChart" }),
         els.searchInput, els.searchCount, els.deptFilter,
@@ -857,17 +858,17 @@
     els.viewport = h("main", { "class": "oc-viewport" }, [els.world, els.status]);
 
     els.detailsBody = h("div", { "class": "oc-details-body" });
-    els.detailsClose = h("button", { "class": "oc-close", text: "✕" });
+    els.detailsClose = h("button", { type: "button", "class": "oc-close", text: "✕" });
     els.detailsPanel = h("aside", { "class": "oc-details", hidden: "" },
       [els.detailsClose, els.detailsBody]);
 
     els.settingsBody = h("div", { "class": "oc-settings-body" });
-    els.settingsClose = h("button", { "class": "oc-close", text: "✕" });
+    els.settingsClose = h("button", { type: "button", "class": "oc-close", text: "✕" });
     els.settingsDrawer = h("aside", { "class": "oc-settings-drawer", hidden: "" },
       [els.settingsClose, h("h2", { text: "Customize" }), els.settingsBody]);
 
     els.errorMessage = h("p", { "class": "oc-error-message" });
-    els.btnRetry = h("button", { "class": "oc-btn-retry", text: "Retry" });
+    els.btnRetry = h("button", { type: "button", "class": "oc-btn-retry", text: "Retry" });
     els.errorOverlay = h("div", { "class": "oc-error-overlay", hidden: "" }, [
       h("div", { "class": "oc-error-box" }, [
         h("h2", { text: "Could not load data" }),

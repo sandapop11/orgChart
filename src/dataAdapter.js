@@ -67,14 +67,40 @@
 
   // Task 2 extends this with orphan/cycle/multi-root repairs.
   function linkTree(nodesById, warnings) {
+    // break circular pid chains first
+    for (const node of nodesById.values()) {
+      const seen = new Set([node.id]);
+      let cur = node;
+      while (cur.pid !== null) {
+        const parent = nodesById.get(cur.pid);
+        if (!parent) break;
+        if (seen.has(parent.id)) {
+          warnings.push("circular pid chain broken at id " + cur.id);
+          cur.pid = null;
+          break;
+        }
+        seen.add(parent.id);
+        cur = parent;
+      }
+    }
+
+    // pick the root: first node (insertion order) with no pid
     let root = null;
     for (const node of nodesById.values()) {
-      if (node.pid === null && !root) root = node;
+      if (node.pid === null) { root = node; break; }
     }
+    if (!root) throw new Error("no root node found");
+
     for (const node of nodesById.values()) {
       if (node === root) continue;
-      const parent = node.pid !== null ? nodesById.get(node.pid) : undefined;
-      if (parent) parent.children.push(node);
+      let parent = node.pid !== null ? nodesById.get(node.pid) : undefined;
+      if (!parent) {
+        warnings.push("orphan node " + node.id + " (pid " + node.pid +
+          " not found): attached to root");
+        node.pid = root.id;
+        parent = root;
+      }
+      parent.children.push(node);
     }
     return root;
   }

@@ -54,3 +54,37 @@ test("duplicate ids: first wins, warning emitted", () => {
   assert.equal(nodesById.get("2").displayName, "Amrita Maharjan");
   assert.ok(warnings.some(w => w.includes("duplicate id 2")));
 });
+
+test("orphan pid attaches to root with warning", () => {
+  const raw = RAW.concat([{ id: 9, name: "Lost(9)", title: "X", pid: "77777" }]);
+  const { root, nodesById, warnings } = adapter.adapt(raw);
+  assert.ok(root.children.some(c => c.id === "9"));
+  assert.equal(nodesById.get("9").pid, "1");
+  assert.ok(warnings.some(w => w.includes("orphan") && w.includes("9")));
+});
+
+test("extra parentless nodes attach to root with warning", () => {
+  const raw = RAW.concat([{ id: 10, name: "Second Root(10)", title: "X" }]);
+  const { root, warnings } = adapter.adapt(raw);
+  assert.ok(root.children.some(c => c.id === "10"));
+  assert.ok(warnings.some(w => w.includes("10")));
+});
+
+test("circular pid chain is broken with warning", () => {
+  const raw = RAW.concat([
+    { id: 20, name: "A(20)", title: "X", pid: "21" },
+    { id: 21, name: "B(21)", title: "X", pid: "20" }
+  ]);
+  const { root, nodesById, warnings } = adapter.adapt(raw);
+  assert.ok(warnings.some(w => w.includes("circular")));
+  // both nodes end up reachable from the root
+  const seen = new Set();
+  (function walk(n) { seen.add(n.id); n.children.forEach(walk); })(root);
+  assert.ok(seen.has("20") && seen.has("21"));
+});
+
+test("no root at all throws", () => {
+  assert.throws(() => adapter.adapt([{ id: 5, name: "X(5)", title: "X", pid: "99" },
+                                     { id: 6, name: "Y(6)", title: "Y", pid: "98" }]),
+    /no root node found/);
+});

@@ -35,3 +35,37 @@ test("every button has type=button so it can't submit a host page's <form>", () 
       "button missing type=\"button\": " + (b.className || b.textContent));
   });
 });
+
+test("dom.build omits individual toolbar buttons when their flag is false", () => {
+  const dom = makeWindow(["src/dom.js"]);
+  const els = dom.window.OrgChart.dom.build({
+    showToolbar: true, showFitButton: false, showExportButton: false,
+    showPrintButton: false, showSettingsButton: false
+  });
+  assert.equal(els.btnFit, undefined);
+  assert.equal(els.btnExport, undefined);
+  assert.equal(els.btnPrint, undefined);
+  assert.equal(els.btnSettings, undefined);
+  assert.equal(els.toolbar.querySelector(".oc-btn"), null,
+    "no action buttons should remain in the toolbar DOM");
+  assert.ok(els.searchInput && els.deptFilter,
+    "search box and department filter are unaffected by these flags");
+});
+
+test("dom.build shows all four buttons by default when flags are omitted", () => {
+  const dom = makeWindow(["src/dom.js"]);
+  const els = dom.window.OrgChart.dom.build({ showToolbar: true });
+  assert.ok(els.btnFit && els.btnExport && els.btnPrint && els.btnSettings);
+});
+
+test("dom.build uses a custom logoText verbatim", () => {
+  const dom = makeWindow(["src/dom.js"]);
+  const els = dom.window.OrgChart.dom.build({ showToolbar: true, logoText: "★ Acme Corp" });
+  assert.equal(els.toolbar.querySelector(".oc-logo").textContent, "★ Acme Corp");
+});
+
+test("dom.build defaults logoText to the original OrgChart branding", () => {
+  const dom = makeWindow(["src/dom.js"]);
+  const els = dom.window.OrgChart.dom.build({ showToolbar: true });
+  assert.equal(els.toolbar.querySelector(".oc-logo").textContent, "◈ OrgChart");
+});

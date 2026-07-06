@@ -45,8 +45,16 @@
   }
 
   function update() {
-    // Task 6 fills this in (layout + render). For now show a status line.
     const a = state.adapted;
+    const viewport = $("viewport");
+    const layoutSettings = Object.assign({}, state.settings, {
+      viewportWidth: viewport.clientWidth,
+      viewportHeight: viewport.clientHeight,
+      filterDepartmentId: state.filterDept
+    });
+    state.layout = OrgChart.layoutEngine.compute(a.root, layoutSettings, state.collapsed);
+    OrgChart.renderer.render(state.layout, a, state.settings,
+      { world: $("world"), svg: $("connectors") });
     $("status").textContent = "Loaded " +
       (a.nodesById.size - a.departments.length - 1) + " employees · " +
       a.departments.length + " departments" +

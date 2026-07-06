@@ -1,18 +1,21 @@
 (function () {
   "use strict";
 
-  const KEY = "orgchart.settings.v1";
   const DEFAULTS = {
     cardStyle: "portrait", orientation: "top-down", maxColumns: 4,
     spacing: "normal", theme: "system", deptColors: {},
     showPhotos: true, showTitles: true, showBadges: true, showEmpty: false
   };
 
+  function keyFor(instanceId) {
+    return "orgchart.settings." + (instanceId || "default");
+  }
+
   const settingsStore = {
     DEFAULTS: DEFAULTS,
-    load: function () {
+    load: function (instanceId) {
       try {
-        const raw = localStorage.getItem(KEY);
+        const raw = localStorage.getItem(keyFor(instanceId));
         if (!raw) return Object.assign({}, DEFAULTS, { deptColors: {} });
         const parsed = JSON.parse(raw);
         return Object.assign({}, DEFAULTS, parsed,
@@ -21,8 +24,8 @@
         return Object.assign({}, DEFAULTS, { deptColors: {} });
       }
     },
-    save: function (settings) {
-      try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch (e) {}
+    save: function (instanceId, settings) {
+      try { localStorage.setItem(keyFor(instanceId), JSON.stringify(settings)); } catch (e) {}
     }
   };
 

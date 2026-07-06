@@ -1,283 +1,323 @@
 (function () {
   "use strict";
 
-  const state = {
-    adapted: null,
-    settings: null,        // Task 10 replaces with settingsStore.load()
-    collapsed: new Set(),
-    selectedId: null,
-    searchQuery: "",
-    matches: [],
-    matchIndex: 0,
-    filterDept: null,
-    controller: null,
-    fitted: false
-  };
-
-  function $(id) { return document.getElementById(id); }
-
-  function applyTheme() {
-    const pref = state.settings.theme;
-    const dark = pref === "dark" ||
-      (pref === "system" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  function resolveTarget(target) {
+    if (target && target.nodeType === 1) return target;
+    if (typeof target === "string") {
+      return document.getElementById(target) || document.querySelector(target);
+    }
+    return null;
   }
 
-  window.matchMedia("(prefers-color-scheme: dark)")
-    .addEventListener("change", function () {
-      if (state.adapted) applyTheme();
-    });
+  function render(target, options) {
+    options = options || {};
+    var host = resolveTarget(target);
+    if (!host) throw new Error("OrgChart.render: target element not found: " + target);
 
-  async function loadData() {
-    const cfg = window.OrgChartConfig || {};
-    if (cfg.apiUrl) {
-      try {
-        const res = await fetch(cfg.apiUrl);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const json = await res.json();
-        if (!json || !Array.isArray(json.items)) throw new Error("unexpected JSON shape");
-        return json.items;
-      } catch (err) {
-        console.warn("API load failed (" + err.message + "), falling back to data.js");
-        if (window.maps && Array.isArray(window.maps.items)) return window.maps.items;
-        throw err;
+    var showToolbar = !(options.settings && options.settings.showToolbar === false);
+    var instanceId = options.instanceId || host.id || "default";
+
+    var els = OrgChart.dom.build({ showToolbar: showToolbar });
+    host.appendChild(els.root);
+
+    var state = {
+      adapted: null, settings: null, collapsed: new Set(), selectedId: null,
+      searchQuery: "", matches: [], matchIndex: 0, filterDept: null,
+      controller: null, fitted: false, layout: null
+    };
+
+    var listeners = [];
+    function on(t, type, fn, opts) {
+      t.addEventListener(type, fn, opts);
+      listeners.push({ target: t, type: type, fn: fn });
+    }
+
+    function prefersDark() {
+      return typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    function applyTheme() {
+      var pref = state.settings.theme;
+      var dark = pref === "dark" || (pref === "system" && prefersDark());
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    }
+    var mq = typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    if (mq && mq.addEventListener) {
+      var onScheme = function () { if (state.adapted) applyTheme(); };
+      mq.addEventListener("change", onScheme);
+      listeners.push({ target: mq, type: "change", fn: onScheme });
+    }
+
+    async function loadData() {
+      if (options.apiUrl) {
+        try {
+          var res = await fetch(options.apiUrl);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          var json = await res.json();
+          if (!json || !Array.isArray(json.items)) throw new Error("unexpected JSON shape");
+          return json.items;
+        } catch (err) {
+          console.warn("[orgchart] API load failed (" + err.message + "), falling back");
+          if (Array.isArray(options.data)) return options.data;
+          if (window.maps && Array.isArray(window.maps.items)) return window.maps.items;
+          throw err;
+        }
+      }
+      if (Array.isArray(options.data)) return options.data;
+      if (window.maps && Array.isArray(window.maps.items)) return window.maps.items;
+      throw new Error("No data source: pass options.data or options.apiUrl");
+    }
+
+    function showError(err) {
+      els.errorMessage.textContent = String(err.message || err);
+      els.errorOverlay.hidden = false;
+    }
+
+    function rebuildDeptOptions() {
+      if (!els.deptFilter) return;
+      while (els.deptFilter.options.length > 1) els.deptFilter.remove(1);
+      for (var i = 0; i < state.adapted.departments.length; i++) {
+        var d = state.adapted.departments[i];
+        var opt = document.createElement("option");
+        opt.value = d.id; opt.textContent = d.displayName;
+        els.deptFilter.appendChild(opt);
       }
     }
-    if (window.maps && Array.isArray(window.maps.items)) return window.maps.items;
-    throw new Error("No data source: set OrgChartConfig.apiUrl or include data.js");
-  }
 
-  function showError(err) {
-    $("error-message").textContent = String(err.message || err);
-    $("error-overlay").hidden = false;
-  }
-
-  function update() {
-    const a = state.adapted;
-    const viewport = $("viewport");
-    const layoutSettings = Object.assign({}, state.settings, {
-      viewportWidth: viewport.clientWidth,
-      viewportHeight: viewport.clientHeight,
-      filterDepartmentId: state.filterDept
-    });
-    state.layout = OrgChart.layoutEngine.compute(a.root, layoutSettings, state.collapsed);
-    OrgChart.renderer.render(state.layout, a, state.settings,
-      { world: $("world"), svg: $("connectors") });
-    $("status").textContent = "Loaded " +
-      (a.nodesById.size - a.departments.length - 1) + " employees · " +
-      a.departments.length + " departments" +
-      (a.warnings.length ? " · " + a.warnings.length + " data warnings (see console)" : "");
-    if (!state.fitted) { state.controller.fit(state.layout); state.fitted = true; }
-    markSelected();
-    applySearchHighlight();
-  }
-
-  function reportingPath(node) {
-    const parts = [];
-    let cur = node;
-    while (cur && cur.pid !== null) {
-      cur = state.adapted.nodesById.get(cur.pid);
-      if (cur) parts.push(cur.displayName);
-    }
-    return parts.join(" → ") || "—";
-  }
-
-  function openDetails(id) {
-    const node = state.adapted.nodesById.get(id);
-    if (!node) return;
-    state.selectedId = id;
-    const body = $("details-body");
-    body.innerHTML = "";
-
-    let avatar;
-    if (node.img) {
-      avatar = document.createElement("img");
-      avatar.src = node.img;
-      avatar.alt = "";
-      avatar.addEventListener("error", function () {
-        avatar.replaceWith(makeInitialsLg(node));
+    function update() {
+      var a = state.adapted;
+      var layoutSettings = Object.assign({}, state.settings, {
+        viewportWidth: els.viewport.clientWidth,
+        viewportHeight: els.viewport.clientHeight,
+        filterDepartmentId: state.filterDept
       });
-    } else {
-      avatar = makeInitialsLg(node);
+      state.layout = OrgChart.layoutEngine.compute(a.root, layoutSettings, state.collapsed);
+      OrgChart.renderer.render(state.layout, a, state.settings,
+        { world: els.world, svg: els.svg });
+      els.status.textContent = "Loaded " +
+        (a.nodesById.size - a.departments.length - 1) + " employees · " +
+        a.departments.length + " departments" +
+        (a.warnings.length ? " · " + a.warnings.length + " data warnings (see console)" : "");
+      if (!state.fitted) { state.controller.fit(state.layout); state.fitted = true; }
+      markSelected();
+      applySearchHighlight();
     }
-    avatar.classList.add("avatar-lg");
-    body.appendChild(avatar);
 
-    const h3 = document.createElement("h3");
-    h3.textContent = node.displayName;
-    body.appendChild(h3);
-    const sub = document.createElement("div");
-    sub.className = "sub";
-    sub.textContent = node.title;
-    body.appendChild(sub);
-
-    const dl = document.createElement("dl");
-    const fields = [
-      ["Department", node.department || "—"],
-      ["Employee #", node.employeeNo || "—"],
-      ["Reports to", reportingPath(node)],
-      ["Tags", node.tags.filter(function (t) { return t !== "group"; }).join(", ") || "—"]
-    ];
-    for (const f of fields) {
-      const dt = document.createElement("dt"); dt.textContent = f[0];
-      const dd = document.createElement("dd"); dd.textContent = f[1];
-      dl.appendChild(dt); dl.appendChild(dd);
-    }
-    body.appendChild(dl);
-
-    $("details-panel").hidden = false;
-    markSelected();
-  }
-
-  function makeInitialsLg(node) {
-    const R = OrgChart.renderer;
-    const d = document.createElement("div");
-    d.className = "avatar-lg"; // keeps the class when replacing a failed <img>
-    d.textContent = R.initials(node.displayName);
-    d.style.background = R.avatarColor(node.displayName);
-    return d;
-  }
-
-  function closeDetails() {
-    state.selectedId = null;
-    $("details-panel").hidden = true;
-    markSelected();
-  }
-
-  function markSelected() {
-    document.querySelectorAll(".card--selected").forEach(function (n) {
-      n.classList.remove("card--selected");
-    });
-    if (state.selectedId) {
-      const el = document.querySelector('[data-card-id="' + state.selectedId + '"]');
-      if (el) el.classList.add("card--selected");
-    }
-  }
-
-  function expandAncestorsOf(ids) {
-    for (const id of ids) {
-      let cur = state.adapted.nodesById.get(id);
+    function reportingPath(node) {
+      var parts = [];
+      var cur = node;
       while (cur && cur.pid !== null) {
         cur = state.adapted.nodesById.get(cur.pid);
-        if (cur) state.collapsed.delete(cur.id);
+        if (cur) parts.push(cur.displayName);
+      }
+      return parts.join(" → ") || "—";
+    }
+
+    function makeInitialsLg(node) {
+      var R = OrgChart.renderer;
+      var d = document.createElement("div");
+      d.className = "avatar-lg";
+      d.textContent = R.initials(node.displayName);
+      d.style.background = R.avatarColor(node.displayName);
+      return d;
+    }
+
+    function openDetails(id) {
+      var node = state.adapted.nodesById.get(id);
+      if (!node) return;
+      state.selectedId = id;
+      var body = els.detailsBody;
+      body.innerHTML = "";
+
+      var avatar;
+      if (node.img) {
+        avatar = document.createElement("img");
+        avatar.src = node.img; avatar.alt = "";
+        avatar.addEventListener("error", function () { avatar.replaceWith(makeInitialsLg(node)); });
+      } else {
+        avatar = makeInitialsLg(node);
+      }
+      avatar.classList.add("avatar-lg");
+      body.appendChild(avatar);
+
+      var h3 = document.createElement("h3");
+      h3.textContent = node.displayName; body.appendChild(h3);
+      var sub = document.createElement("div");
+      sub.className = "sub"; sub.textContent = node.title; body.appendChild(sub);
+
+      var dl = document.createElement("dl");
+      var fields = [
+        ["Department", node.department || "—"],
+        ["Employee #", node.employeeNo || "—"],
+        ["Reports to", reportingPath(node)],
+        ["Tags", node.tags.filter(function (t) { return t !== "group"; }).join(", ") || "—"]
+      ];
+      for (var i = 0; i < fields.length; i++) {
+        var dt = document.createElement("dt"); dt.textContent = fields[i][0];
+        var dd = document.createElement("dd"); dd.textContent = fields[i][1];
+        dl.appendChild(dt); dl.appendChild(dd);
+      }
+      body.appendChild(dl);
+
+      els.detailsPanel.hidden = false;
+      markSelected();
+    }
+
+    function closeDetails() {
+      state.selectedId = null;
+      els.detailsPanel.hidden = true;
+      markSelected();
+    }
+
+    function markSelected() {
+      var sel = els.world.querySelectorAll(".card--selected");
+      for (var i = 0; i < sel.length; i++) sel[i].classList.remove("card--selected");
+      if (state.selectedId) {
+        var elc = els.world.querySelector('[data-card-id="' + state.selectedId + '"]');
+        if (elc) elc.classList.add("card--selected");
       }
     }
-  }
 
-  function applySearchHighlight() {
-    document.querySelectorAll(".card--hit").forEach(function (n) {
-      n.classList.remove("card--hit");
-    });
-    for (const id of state.matches) {
-      const el = document.querySelector('[data-card-id="' + id + '"]');
-      if (el) el.classList.add("card--hit");
+    function expandAncestorsOf(ids) {
+      for (var i = 0; i < ids.length; i++) {
+        var cur = state.adapted.nodesById.get(ids[i]);
+        while (cur && cur.pid !== null) {
+          cur = state.adapted.nodesById.get(cur.pid);
+          if (cur) state.collapsed.delete(cur.id);
+        }
+      }
     }
-    $("search-count").textContent = state.matches.length
-      ? (state.matchIndex + 1) + " of " + state.matches.length
-      : (state.searchQuery.trim() ? "0 of 0" : "");
-  }
 
-  function goToMatch() {
-    const id = state.matches[state.matchIndex];
-    if (!id) return;
-    const item = state.layout.cards.find(function (c) { return c.node.id === id; });
-    if (item) state.controller.centerOn(item);
-  }
+    function applySearchHighlight() {
+      var hits = els.world.querySelectorAll(".card--hit");
+      for (var i = 0; i < hits.length; i++) hits[i].classList.remove("card--hit");
+      for (var j = 0; j < state.matches.length; j++) {
+        var elc = els.world.querySelector('[data-card-id="' + state.matches[j] + '"]');
+        if (elc) elc.classList.add("card--hit");
+      }
+      if (els.searchCount) {
+        els.searchCount.textContent = state.matches.length
+          ? (state.matchIndex + 1) + " of " + state.matches.length
+          : (state.searchQuery.trim() ? "0 of 0" : "");
+      }
+    }
 
-  function runSearch(query) {
-    state.searchQuery = query;
-    state.matches = OrgChart.searchModule.match(state.adapted.nodesById, query);
-    state.matchIndex = 0;
-    expandAncestorsOf(state.matches);
-    update();
-    goToMatch();
-  }
+    function goToMatch() {
+      var id = state.matches[state.matchIndex];
+      if (!id) return;
+      var item = state.layout.cards.find(function (c) { return c.node.id === id; });
+      if (item) state.controller.centerOn(item);
+    }
 
-  async function boot() {
-    $("error-overlay").hidden = true;
-    state.settings = OrgChart.settingsStore.load();
-    applyTheme();
-    if (!state.controller) {
-      state.controller = OrgChart.interactions.init({
-        viewport: $("viewport"),
-        world: $("world"),
-        onCardClick: openDetails,
-        onToggleContainer: function (id) {
-          if (state.collapsed.has(id)) state.collapsed.delete(id);
-          else state.collapsed.add(id);
-          update();
+    function runSearch(query) {
+      state.searchQuery = query;
+      state.matches = OrgChart.searchModule.match(state.adapted.nodesById, query);
+      state.matchIndex = 0;
+      expandAncestorsOf(state.matches);
+      update();
+      goToMatch();
+    }
+
+    function ingest(items) {
+      state.adapted = OrgChart.dataAdapter.adapt(items);
+      state.adapted.warnings.forEach(function (w) { console.warn("[orgchart]", w); });
+      rebuildDeptOptions();
+    }
+
+    async function boot() {
+      els.errorOverlay.hidden = true;
+      state.settings = OrgChart.settingsStore.load(instanceId);
+      if (options.settings) Object.assign(state.settings, options.settings);
+      applyTheme();
+      if (!state.controller) {
+        state.controller = OrgChart.interactions.init({
+          viewport: els.viewport, world: els.world,
+          onCardClick: openDetails,
+          onToggleContainer: function (id) {
+            if (state.collapsed.has(id)) state.collapsed.delete(id);
+            else state.collapsed.add(id);
+            update();
+          }
+        });
+      }
+      try {
+        var items = await loadData();
+        ingest(items);
+        if (els.settingsBody) {
+          OrgChart.settingsPanel.init(els.settingsBody, state.settings,
+            state.adapted.departments, function (s) {
+              OrgChart.settingsStore.save(instanceId, s);
+              applyTheme();
+              update();
+            });
+        }
+        update();
+      } catch (err) {
+        showError(err);
+      }
+    }
+
+    // --- event wiring (toolbar controls guarded for showToolbar:false) ---
+    on(els.btnRetry, "click", boot);
+    on(els.detailsClose, "click", closeDetails);
+    on(els.settingsClose, "click", function () { els.settingsDrawer.hidden = true; });
+    on(document, "keydown", function (e) {
+      if (e.key === "Escape") { closeDetails(); els.settingsDrawer.hidden = true; }
+    });
+    if (els.btnFit) on(els.btnFit, "click", function () {
+      if (state.layout) state.controller.fit(state.layout);
+    });
+    if (els.searchInput) {
+      on(els.searchInput, "input", function (e) { runSearch(e.target.value); });
+      on(els.searchInput, "keydown", function (e) {
+        if (e.key === "Enter" && state.matches.length) {
+          state.matchIndex = (state.matchIndex + 1) % state.matches.length;
+          applySearchHighlight(); goToMatch();
         }
       });
     }
-    try {
-      const items = await loadData();
-      state.adapted = OrgChart.dataAdapter.adapt(items);
-      state.adapted.warnings.forEach(function (w) { console.warn("[orgchart]", w); });
-      const sel = $("dept-filter");
-      while (sel.options.length > 1) sel.remove(1);
-      for (const d of state.adapted.departments) {
-        const opt = document.createElement("option");
-        opt.value = d.id;
-        opt.textContent = d.displayName;
-        sel.appendChild(opt);
-      }
-      OrgChart.settingsPanel.init($("settings-body"), state.settings,
-        state.adapted.departments, function (s) {
-          OrgChart.settingsStore.save(s);
-          applyTheme();
-          update();
-        });
+    if (els.deptFilter) on(els.deptFilter, "change", function (e) {
+      state.filterDept = e.target.value || null;
+      state.fitted = false;
       update();
-    } catch (err) {
-      showError(err);
-    }
+    });
+    if (els.btnSettings) on(els.btnSettings, "click", function () {
+      els.settingsDrawer.hidden = !els.settingsDrawer.hidden;
+    });
+    if (els.btnExport) on(els.btnExport, "click", function () {
+      OrgChart.exporter.exportPng(els.world, state.layout);
+    });
+    if (els.btnPrint) on(els.btnPrint, "click", function () { window.print(); });
+    on(window, "beforeprint", function () {
+      OrgChart.exporter.preparePrint(els.world, state.layout);
+    });
+    on(window, "afterprint", function () {
+      OrgChart.exporter.restoreAfterPrint(els.world);
+    });
+    on(window, "resize", function () { if (state.adapted) update(); });
+
+    boot();
+
+    return {
+      update: function (newData) {
+        ingest(newData);
+        update();
+      },
+      fit: function () { if (state.layout) state.controller.fit(state.layout); },
+      destroy: function () {
+        for (var i = 0; i < listeners.length; i++) {
+          var L = listeners[i];
+          if (L.target && L.target.removeEventListener) {
+            L.target.removeEventListener(L.type, L.fn);
+          }
+        }
+        listeners.length = 0;
+        if (els.root.parentNode) els.root.parentNode.removeChild(els.root);
+      }
+    };
   }
 
-  $("btn-retry").addEventListener("click", boot);
-  $("btn-fit").addEventListener("click", function () {
-    state.controller.fit(state.layout);
-  });
-  $("details-close").addEventListener("click", closeDetails);
-  $("settings-close").addEventListener("click", function () {
-    $("settings-drawer").hidden = true;
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { closeDetails(); $("settings-drawer").hidden = true; }
-  });
-  $("search-input").addEventListener("input", function (e) {
-    runSearch(e.target.value);
-  });
-  $("search-input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && state.matches.length) {
-      state.matchIndex = (state.matchIndex + 1) % state.matches.length;
-      applySearchHighlight();
-      goToMatch();
-    }
-  });
-  $("dept-filter").addEventListener("change", function (e) {
-    state.filterDept = e.target.value || null;
-    state.fitted = false; // re-fit for the new extent
-    update();
-  });
-  $("btn-settings").addEventListener("click", function () {
-    $("settings-drawer").hidden = !$("settings-drawer").hidden;
-  });
-  $("btn-export").addEventListener("click", function () {
-    OrgChart.exporter.exportPng($("world"), state.layout);
-  });
-  $("btn-print").addEventListener("click", function () { window.print(); });
-  window.addEventListener("beforeprint", function () {
-    OrgChart.exporter.preparePrint($("world"), state.layout);
-  });
-  window.addEventListener("afterprint", function () {
-    OrgChart.exporter.restoreAfterPrint($("world"));
-  });
-  window.addEventListener("resize", function () {
-    if (state.adapted) update();
-  });
-  boot();
-
   window.OrgChart = window.OrgChart || {};
-  window.OrgChart.app = { state, update, boot };
+  window.OrgChart.render = render;
 })();

@@ -13,8 +13,12 @@
 
   function normalizeImageUrl(raw) {
     if (typeof raw !== "string" || raw.trim() === "") return "";
+    // host-relative URLs (no scheme/host) need a base to resolve against;
+    // in a browser that's the current page, matching what <img src="..."> does
+    var base = typeof window !== "undefined" && window.location
+      ? window.location.href : undefined;
     try {
-      return new URL(raw.replace(/\\\//g, "/")).href;
+      return new URL(raw.replace(/\\\//g, "/"), base).href;
     } catch (e) {
       return "";
     }

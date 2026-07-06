@@ -1,6 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const adapter = require("../src/dataAdapter.js");
+const { makeWindow } = require("./support.js");
 
 const RAW = [
   { id: 1, name: "Riken Singh Maharjan(999)", title: "CEO", DEPARTMENT_NAME: "Admin",
@@ -38,6 +39,15 @@ test("image URLs collapse ../ segments; empty img stays empty", () => {
   const { nodesById } = adapter.adapt(RAW);
   assert.equal(nodesById.get("1").img, "https://hr.example.com/thalo/images/emp//riken.jpg");
   assert.equal(nodesById.get("2").img, "");
+});
+
+test("host-relative image URLs (no scheme/host) resolve against the current page in a browser", () => {
+  const win = makeWindow(["src/dataAdapter.js"]).window;
+  const raw = [{ id: 1, name: "Amrita Maharjan(2)", title: "Client Relation Manager",
+    img: "/../../thalo/images/employee/employee/employee_profile//amrita-3a4f2d82.jpg" }];
+  const { nodesById } = win.OrgChart.dataAdapter.adapt(raw);
+  assert.equal(nodesById.get("1").img,
+    "http://localhost/thalo/images/employee/employee/employee_profile//amrita-3a4f2d82.jpg");
 });
 
 test("tree links children and assigns deptId from nearest group ancestor", () => {

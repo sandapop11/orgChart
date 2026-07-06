@@ -560,6 +560,7 @@
     const viewport = opts.viewport, world = opts.world;
     const t = { x: 0, y: 0, scale: 1 };
     let dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+    let downTarget = null;
 
     function apply() {
       world.style.transform =
@@ -570,6 +571,9 @@
       if (e.button !== 0) return;
       dragging = true; moved = false;
       sx = e.clientX; sy = e.clientY; ox = t.x; oy = t.y;
+      // remembered before setPointerCapture below, which makes the browser
+      // retarget the eventual click's e.target to viewport itself
+      downTarget = e.target;
       viewport.classList.add("panning");
       viewport.setPointerCapture(e.pointerId);
     });
@@ -587,9 +591,10 @@
 
     viewport.addEventListener("click", function (e) {
       if (moved) { moved = false; return; }
-      const toggle = e.target.closest("[data-toggle-id]");
+      const hit = downTarget || e.target;
+      const toggle = hit.closest("[data-toggle-id]");
       if (toggle) { opts.onToggleContainer(toggle.dataset.toggleId); return; }
-      const card = e.target.closest("[data-card-id]");
+      const card = hit.closest("[data-card-id]");
       if (card) opts.onCardClick(card.dataset.cardId);
     });
 

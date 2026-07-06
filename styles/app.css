@@ -1,0 +1,61 @@
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font: 14px/1.45 system-ui, "Segoe UI", sans-serif;
+  background: var(--bg); color: var(--text);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+#toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: var(--toolbar-bg); color: var(--toolbar-text); flex: none;
+}
+#toolbar .logo { font-weight: 700; margin-right: 8px; white-space: nowrap; }
+#toolbar .spacer { flex: 1; }
+#toolbar input, #toolbar select, #toolbar button {
+  background: rgba(255, 255, 255, 0.08); color: inherit;
+  border: 1px solid var(--toolbar-border); border-radius: 6px;
+  padding: 5px 10px; font: inherit;
+}
+#toolbar button { cursor: pointer; white-space: nowrap; }
+#toolbar button:hover { background: rgba(255, 255, 255, 0.16); }
+#search-input { width: 230px; }
+#search-count { font-size: 12px; color: var(--text-muted); min-width: 48px; }
+
+#viewport {
+  flex: 1; position: relative; overflow: hidden;
+  background: radial-gradient(color-mix(in srgb, var(--wire) 35%, transparent) 1px,
+    transparent 1px);
+  background-size: 18px 18px; cursor: grab;
+}
+#viewport.panning { cursor: grabbing; }
+#world { position: absolute; transform-origin: 0 0; }
+#connectors { position: absolute; left: 0; top: 0; overflow: visible; }
+#status {
+  position: absolute; left: 12px; bottom: 10px; font-size: 12px;
+  color: var(--text-muted); pointer-events: none;
+}
+
+#details-panel, #settings-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 300px;
+  background: var(--surface); border-left: 1px solid var(--border);
+  box-shadow: var(--shadow); padding: 16px; overflow-y: auto; z-index: 30;
+}
+#details-panel .close {
+  position: absolute; top: 10px; right: 10px; border: none; background: none;
+  font-size: 16px; cursor: pointer; color: var(--text-muted);
+}
+
+#error-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+}
+#error-overlay[hidden] { display: none; }
+.error-box {
+  background: var(--surface); color: var(--text); border-radius: 12px;
+  padding: 28px 36px; max-width: 420px; text-align: center; box-shadow: var(--shadow);
+}
+.error-box button {
+  margin-top: 12px; padding: 8px 24px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface-2); color: inherit; font: inherit; cursor: pointer;
+}

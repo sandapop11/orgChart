@@ -63,6 +63,7 @@
       (a.warnings.length ? " · " + a.warnings.length + " data warnings (see console)" : "");
     if (!state.fitted) { state.controller.fit(state.layout); state.fitted = true; }
     markSelected();
+    applySearchHighlight();
   }
 
   function reportingPath(node) {
@@ -147,6 +148,45 @@
     }
   }
 
+  function expandAncestorsOf(ids) {
+    for (const id of ids) {
+      let cur = state.adapted.nodesById.get(id);
+      while (cur && cur.pid !== null) {
+        cur = state.adapted.nodesById.get(cur.pid);
+        if (cur) state.collapsed.delete(cur.id);
+      }
+    }
+  }
+
+  function applySearchHighlight() {
+    document.querySelectorAll(".card--hit").forEach(function (n) {
+      n.classList.remove("card--hit");
+    });
+    for (const id of state.matches) {
+      const el = document.querySelector('[data-card-id="' + id + '"]');
+      if (el) el.classList.add("card--hit");
+    }
+    $("search-count").textContent = state.matches.length
+      ? (state.matchIndex + 1) + " of " + state.matches.length
+      : (state.searchQuery.trim() ? "0 of 0" : "");
+  }
+
+  function goToMatch() {
+    const id = state.matches[state.matchIndex];
+    if (!id) return;
+    const item = state.layout.cards.find(function (c) { return c.node.id === id; });
+    if (item) state.controller.centerOn(item);
+  }
+
+  function runSearch(query) {
+    state.searchQuery = query;
+    state.matches = OrgChart.searchModule.match(state.adapted.nodesById, query);
+    state.matchIndex = 0;
+    expandAncestorsOf(state.matches);
+    update();
+    goToMatch();
+  }
+
   async function boot() {
     $("error-overlay").hidden = true;
     state.settings = Object.assign({}, DEFAULT_SETTINGS);
@@ -166,6 +206,14 @@
       const items = await loadData();
       state.adapted = OrgChart.dataAdapter.adapt(items);
       state.adapted.warnings.forEach(function (w) { console.warn("[orgchart]", w); });
+      const sel = $("dept-filter");
+      while (sel.options.length > 1) sel.remove(1);
+      for (const d of state.adapted.departments) {
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = d.displayName;
+        sel.appendChild(opt);
+      }
       update();
     } catch (err) {
       showError(err);
@@ -179,6 +227,21 @@
   $("details-close").addEventListener("click", closeDetails);
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { closeDetails(); $("settings-drawer").hidden = true; }
+  });
+  $("search-input").addEventListener("input", function (e) {
+    runSearch(e.target.value);
+  });
+  $("search-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && state.matches.length) {
+      state.matchIndex = (state.matchIndex + 1) % state.matches.length;
+      applySearchHighlight();
+      goToMatch();
+    }
+  });
+  $("dept-filter").addEventListener("change", function (e) {
+    state.filterDept = e.target.value || null;
+    state.fitted = false; // re-fit for the new extent
+    update();
   });
   window.addEventListener("resize", function () {
     if (state.adapted) update();

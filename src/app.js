@@ -62,6 +62,89 @@
       a.departments.length + " departments" +
       (a.warnings.length ? " · " + a.warnings.length + " data warnings (see console)" : "");
     if (!state.fitted) { state.controller.fit(state.layout); state.fitted = true; }
+    markSelected();
+  }
+
+  function reportingPath(node) {
+    const parts = [];
+    let cur = node;
+    while (cur && cur.pid !== null) {
+      cur = state.adapted.nodesById.get(cur.pid);
+      if (cur) parts.push(cur.displayName);
+    }
+    return parts.join(" → ") || "—";
+  }
+
+  function openDetails(id) {
+    const node = state.adapted.nodesById.get(id);
+    if (!node) return;
+    state.selectedId = id;
+    const body = $("details-body");
+    body.innerHTML = "";
+
+    let avatar;
+    if (node.img) {
+      avatar = document.createElement("img");
+      avatar.src = node.img;
+      avatar.alt = "";
+      avatar.addEventListener("error", function () {
+        avatar.replaceWith(makeInitialsLg(node));
+      });
+    } else {
+      avatar = makeInitialsLg(node);
+    }
+    avatar.classList.add("avatar-lg");
+    body.appendChild(avatar);
+
+    const h3 = document.createElement("h3");
+    h3.textContent = node.displayName;
+    body.appendChild(h3);
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    sub.textContent = node.title;
+    body.appendChild(sub);
+
+    const dl = document.createElement("dl");
+    const fields = [
+      ["Department", node.department || "—"],
+      ["Employee #", node.employeeNo || "—"],
+      ["Reports to", reportingPath(node)],
+      ["Tags", node.tags.filter(function (t) { return t !== "group"; }).join(", ") || "—"]
+    ];
+    for (const f of fields) {
+      const dt = document.createElement("dt"); dt.textContent = f[0];
+      const dd = document.createElement("dd"); dd.textContent = f[1];
+      dl.appendChild(dt); dl.appendChild(dd);
+    }
+    body.appendChild(dl);
+
+    $("details-panel").hidden = false;
+    markSelected();
+  }
+
+  function makeInitialsLg(node) {
+    const R = OrgChart.renderer;
+    const d = document.createElement("div");
+    d.className = "avatar-lg"; // keeps the class when replacing a failed <img>
+    d.textContent = R.initials(node.displayName);
+    d.style.background = R.avatarColor(node.displayName);
+    return d;
+  }
+
+  function closeDetails() {
+    state.selectedId = null;
+    $("details-panel").hidden = true;
+    markSelected();
+  }
+
+  function markSelected() {
+    document.querySelectorAll(".card--selected").forEach(function (n) {
+      n.classList.remove("card--selected");
+    });
+    if (state.selectedId) {
+      const el = document.querySelector('[data-card-id="' + state.selectedId + '"]');
+      if (el) el.classList.add("card--selected");
+    }
   }
 
   async function boot() {
@@ -71,7 +154,7 @@
       state.controller = OrgChart.interactions.init({
         viewport: $("viewport"),
         world: $("world"),
-        onCardClick: function (id) { console.log("card", id); }, // Task 8 replaces
+        onCardClick: openDetails,
         onToggleContainer: function (id) {
           if (state.collapsed.has(id)) state.collapsed.delete(id);
           else state.collapsed.add(id);
@@ -92,6 +175,10 @@
   $("btn-retry").addEventListener("click", boot);
   $("btn-fit").addEventListener("click", function () {
     state.controller.fit(state.layout);
+  });
+  $("details-close").addEventListener("click", closeDetails);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { closeDetails(); $("settings-drawer").hidden = true; }
   });
   window.addEventListener("resize", function () {
     if (state.adapted) update();
